@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Anaheim, Alkalami, Chivo_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const anaheim = Anaheim({ subsets: ["latin"], variable: "--font-sans" });
+const alkalami = Alkalami({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  weight: "400",
+});
+const chivoMono = Chivo_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "Lama Dev School Management Dashboard",
+  title: "MOJI School Management Dashboard",
   description: "Next.js School Management System",
 };
 
@@ -16,7 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body
+        className={(anaheim.variable, alkalami.variable, chivoMono.variable)}
+      >
+        {children}
+      </body>
     </html>
   );
 }
