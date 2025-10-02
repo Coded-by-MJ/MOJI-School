@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +23,59 @@ const StudentForm = dynamic(() => import("./StudentForm"), {
   loading: () => <FormSkeleton />,
   ssr: false,
 });
+
+const ParentForm = dynamic(() => import("./ParentForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+const SubjectForm = dynamic(() => import("./SubjectForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+const ClassForm = dynamic(() => import("./ClassForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+
+const LessonForm = dynamic(() => import("./LessonForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+const ExamForm = dynamic(() => import("./ExamForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+const AssignmentForm = dynamic(() => import("./AssignmentForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+const ResultForm = dynamic(() => import("./ResultForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+const AttendanceForm = dynamic(() => import("./AttendanceForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+const EventForm = dynamic(() => import("./EventForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+const AnnouncementForm = dynamic(() => import("./AnnouncementForm"), {
+  loading: () => <FormSkeleton />,
+  ssr: false,
+});
+
+
 
 type DialogActionType = "update" | "create" | "delete";
 
@@ -59,16 +111,16 @@ const forms: {
 } = {
   teacher: (type, data) => <TeacherForm type={type} data={data} />,
   student: (type, data) => <StudentForm type={type} data={data} />,
-  parent: () => <div>Parent form not implemented</div>,
-  subject: () => <div>Subject form not implemented</div>,
-  class: () => <div>Class form not implemented</div>,
-  lesson: () => <div>Lesson form not implemented</div>,
-  exam: () => <div>Exam form not implemented</div>,
-  assignment: () => <div>Assignment form not implemented</div>,
-  result: () => <div>Result form not implemented</div>,
-  attendance: () => <div>Attendance form not implemented</div>,
-  event: () => <div>Event form not implemented</div>,
-  announcement: () => <div>Announcement form not implemented</div>,
+  parent: (type, data) => <ParentForm type={type} data={data} />,
+  subject:(type, data) => <SubjectForm type={type} data={data} />,
+  class: (type, data) => <ClassForm type={type} data={data} />,
+  lesson:(type, data) => <LessonForm type={type} data={data} />,
+  exam: (type, data) => <ExamForm type={type} data={data} />,
+  assignment:(type, data) => <AssignmentForm type={type} data={data} />,
+  result: (type, data) => <ResultForm type={type} data={data} />,
+  attendance:(type, data) => <AttendanceForm type={type} data={data} />,
+  event: (type, data) => <EventForm type={type} data={data} />,
+  announcement: (type, data) => <AnnouncementForm type={type} data={data} />,
 };
 
 const renderIcon = (type: DialogActionType) => {

@@ -3,12 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 
 import { announcementsData, role } from "@/lib/data";
-import Image from "next/image";
-import Link from "next/link";
-import { Route } from "next";
+
 import { DataTable } from "@/components/global/DataTable";
-import { Button } from "../ui/button";
-import { Edit } from "lucide-react";
 import FormDialog from "../forms/FormDialog";
 
 type Announcement = {

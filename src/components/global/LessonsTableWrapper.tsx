@@ -3,12 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 
 import { lessonsData, role } from "@/lib/data";
-import Image from "next/image";
-import Link from "next/link";
-import { Route } from "next";
 import { DataTable } from "@/components/global/DataTable";
-import { Button } from "../ui/button";
-import { Edit, Eye } from "lucide-react";
 import FormDialog from "../forms/FormDialog";
 
 type Lesson = {
@@ -19,7 +14,9 @@ type Lesson = {
 };
 
 function LessonsTableWrapper() {
-  const lessonsActions: ColumnDef<Lesson>[] = ["teacher", "admin"].includes(role)
+  const lessonsActions: ColumnDef<Lesson>[] = ["teacher", "admin"].includes(
+    role
+  )
     ? [
         {
           header: "Actions",

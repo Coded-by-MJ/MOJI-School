@@ -3,12 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 
 import { classesData, role } from "@/lib/data";
-import Image from "next/image";
-import Link from "next/link";
-import { Route } from "next";
+
 import { DataTable } from "@/components/global/DataTable";
-import { Button } from "../ui/button";
-import { Eye } from "lucide-react";
 import FormDialog from "../forms/FormDialog";
 
 type Class = {

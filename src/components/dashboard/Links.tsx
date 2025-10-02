@@ -15,9 +15,8 @@ import {
   Divide,
   BookMarked,
 } from "lucide-react";
-import { BsFillJournalBookmarkFill } from "react-icons/bs";
 import { IoIosPeople } from "react-icons/io";
-import { MdFormatListNumbered, MdListAlt } from "react-icons/md";
+import { MdFormatListNumbered } from "react-icons/md";
 import { RiBookShelfLine } from "react-icons/ri";
 
 const sidebarMenuLinks: DashboardLink[] = [

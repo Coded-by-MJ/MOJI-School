@@ -6,7 +6,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { MoreHorizontal } from "lucide-react";
 
 type ValuePiece = Date | undefined;
-type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 // TEMPORARY
 const events = [

@@ -1,6 +1,5 @@
 "use client";
-import Image from "next/image";
-import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { MoreHorizontal } from "lucide-react";
 

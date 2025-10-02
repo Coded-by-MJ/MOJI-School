@@ -3,11 +3,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 
 import { parentsData } from "@/lib/data";
-import Image from "next/image";
-import Link from "next/link";
-import { Route } from "next";
+
 import { DataTable } from "@/components/global/DataTable";
-import { Button } from "../ui/button";
+
 import { Edit } from "lucide-react";
 
 type Parent = {
@@ -55,19 +53,7 @@ function AttendanceTableWrapper() {
         return <span>{row.original.address}</span>;
       },
     },
-    {
-      header: "Actions",
-      id: "action",
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center gap-2">
-            <Button size={"icon"} className="rounded-full  bg-primary">
-              <Edit className="size-4" />
-            </Button>
-          </div>
-        );
-      },
-    },
+   
   ];
 
   return <DataTable columns={columns} data={parentsData} />;
