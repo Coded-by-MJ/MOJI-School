@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Anaheim, Alkalami, Chivo_Mono } from "next/font/google";
+import {  Anaheim, Alkalami, Chivo_Mono } from "next/font/google";
 import "./globals.css";
-
+import NextTopLoader from "nextjs-toploader";
+import { Toaster } from "sonner";
 const anaheim = Anaheim({ subsets: ["latin"], variable: "--font-sans" });
 const alkalami = Alkalami({
   subsets: ["latin"],
@@ -11,8 +12,8 @@ const alkalami = Alkalami({
 const chivoMono = Chivo_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "MOJI School Management Dashboard",
-  description: "Next.js School Management System",
+  title: "MOJI School",
+  description: "MOJI School Management System",
 };
 
 export default function RootLayout({
@@ -25,7 +26,9 @@ export default function RootLayout({
       <body
         className={(anaheim.variable, alkalami.variable, chivoMono.variable)}
       >
+        <NextTopLoader color="oklch(0.9645 0.0261 90.0969)" showSpinner={false} />
         {children}
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

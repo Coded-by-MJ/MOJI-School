@@ -32,6 +32,12 @@ const nextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "www.miracleibharokhonre.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
   typedRoutes: true,
