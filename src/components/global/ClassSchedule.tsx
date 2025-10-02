@@ -6,7 +6,7 @@ type Props = {
 };
 function ClassSchedule({ heading }: Props) {
   return (
-    <Card className="h-full bg-muted p-4 rounded-md">
+    <Card className="h-full bg-muted p-4 rounded-md min-h-[900px]">
       <CardHeader className=" px-0">
         <h1 className="text-2xl font-semibold">{heading}</h1>
       </CardHeader>

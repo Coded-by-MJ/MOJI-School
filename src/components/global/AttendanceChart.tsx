@@ -24,7 +24,7 @@ const data = [
 
 const AttendanceChart = () => {
   return (
-    <Card className="w-full py-4 h-full rounded-xl">
+    <Card className="w-full py-4 h-full rounded-md">
       {/* HEADER */}
       <CardHeader className="flex px-4 flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-semibold">Attendance</CardTitle>

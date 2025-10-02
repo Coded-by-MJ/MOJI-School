@@ -52,7 +52,7 @@ function DashboardSearchBar({ searchKey, placeHolder }: Props) {
   //   }, [debouncedSearchVal, pathname, push, searchKey, searchParams]);
 
   return (
-    <div className="group transition-colors w-full  duration-200 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]  relative flex h-full flex-1 items-center gap-2 rounded-3xl border bg-transparent px-4 py-2.5 ">
+    <div className="group transition-colors w-full  duration-200 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]  relative flex h-9 flex-1 items-center gap-2 rounded-3xl border border-secondary bg-transparent px-3 py-2 ">
       <button type="button" className="flex h-full items-center justify-center">
         <Search className="size-5 shrink-0 cursor-pointer transition-all text-main-blue " />
       </button>

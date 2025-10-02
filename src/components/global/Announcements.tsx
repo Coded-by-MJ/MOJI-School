@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 const Announcements = () => {
   return (
-    <Card className=" py-4 rounded-md">
+    <Card className=" py-4 bg-muted rounded-md">
       <CardHeader className="flex px-4 items-center justify-between">
         <CardTitle className="text-xl font-semibold">Announcements</CardTitle>
         <span className="text-xs text-muted-foreground">View All</span>

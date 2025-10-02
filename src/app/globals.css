@@ -265,6 +265,10 @@
   margin-bottom: 5px;
 }
 
+.rbc-label {
+  color: oklch(0.3537 0.0394 33.4742);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
