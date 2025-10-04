@@ -10,9 +10,19 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
 
-import { StudentOrTeacherFormSchemaType } from "@/types/zod-schemas";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import FormSkeleton from "./FormSkeleton";
+import {
+  ClassTableDataType,
+  ClassTableRelativeData,
+  LessonTableDataType,
+  ParentTableDataType,
+  StudentTableDataType,
+  StudentTableRelativeData,
+  SubjectTableDataType,
+  TeacherTableDataType,
+} from "@/types";
+import { useState } from "react";
 
 const TeacherForm = dynamic(() => import("./TeacherForm"), {
   loading: () => <FormSkeleton />,
@@ -38,7 +48,6 @@ const ClassForm = dynamic(() => import("./ClassForm"), {
   loading: () => <FormSkeleton />,
   ssr: false,
 });
-
 
 const LessonForm = dynamic(() => import("./LessonForm"), {
   loading: () => <FormSkeleton />,
@@ -75,16 +84,29 @@ const AnnouncementForm = dynamic(() => import("./AnnouncementForm"), {
   ssr: false,
 });
 
-
-
 type DialogActionType = "update" | "create" | "delete";
 
 type FormDataMap = {
-  teacher: Partial<StudentOrTeacherFormSchemaType>;
-  student: Partial<StudentOrTeacherFormSchemaType>;
-  parent: {}; // if you haven't defined yet
+  teacher: Partial<TeacherTableDataType>;
+  student: Partial<StudentTableDataType>;
+  parent: Partial<ParentTableDataType>;
+  subject: Partial<SubjectTableDataType>;
+  class: Partial<ClassTableDataType>;
+  lesson: Partial<LessonTableDataType>;
+  exam: {};
+  assignment: {};
+  result: {};
+  attendance: {};
+  event: {};
+  announcement: {};
+};
+
+type RelativeDataMap = {
+  teacher: {};
+  student: StudentTableRelativeData;
+  parent: {};
   subject: {};
-  class: {};
+  class: ClassTableRelativeData;
   lesson: {};
   exam: {};
   assignment: {};
@@ -94,33 +116,61 @@ type FormDataMap = {
   announcement: {};
 };
 
-// Make FormDialogProps strongly typed
 type FormDialogProps<T extends keyof FormDataMap> = {
   table: T;
   type: DialogActionType;
   data?: FormDataMap[T];
-  id?: number;
+  relativeData?: RelativeDataMap[T];
+
+  id?: string;
+  userId?: string;
 };
 
 // Define forms with correct typing
 const forms: {
-  [K in keyof FormDataMap]: (
-    type: Exclude<DialogActionType, "delete">,
-    data?: FormDataMap[K]
-  ) => JSX.Element;
+  [K in keyof FormDataMap]: (args: {
+    type: Exclude<DialogActionType, "delete">;
+    data?: FormDataMap[K];
+    relativeData?: RelativeDataMap[K];
+    onClose: () => void;
+  }) => JSX.Element;
 } = {
-  teacher: (type, data) => <TeacherForm type={type} data={data} />,
-  student: (type, data) => <StudentForm type={type} data={data} />,
-  parent: (type, data) => <ParentForm type={type} data={data} />,
-  subject:(type, data) => <SubjectForm type={type} data={data} />,
-  class: (type, data) => <ClassForm type={type} data={data} />,
-  lesson:(type, data) => <LessonForm type={type} data={data} />,
-  exam: (type, data) => <ExamForm type={type} data={data} />,
-  assignment:(type, data) => <AssignmentForm type={type} data={data} />,
-  result: (type, data) => <ResultForm type={type} data={data} />,
-  attendance:(type, data) => <AttendanceForm type={type} data={data} />,
-  event: (type, data) => <EventForm type={type} data={data} />,
-  announcement: (type, data) => <AnnouncementForm type={type} data={data} />,
+  teacher: ({ type, data, onClose }) => (
+    <TeacherForm type={type} data={data} onClose={onClose} />
+  ),
+  student: ({ type, data, onClose, relativeData }) => (
+    <StudentForm
+      type={type}
+      data={data}
+      onClose={onClose}
+      relativeData={relativeData}
+    />
+  ),
+  parent: ({ type, data, onClose }) => (
+    <ParentForm type={type} data={data} onClose={onClose} />
+  ),
+  subject: ({ type, data, onClose }) => (
+    <SubjectForm type={type} data={data} onClose={onClose} />
+  ),
+  class: ({ type, data, relativeData, onClose }) => (
+    <ClassForm
+      type={type}
+      data={data}
+      relativeData={relativeData}
+      onClose={onClose}
+    />
+  ),
+  lesson: ({ type, data, onClose }) => (
+    <LessonForm type={type} data={data} onClose={onClose} />
+  ),
+  exam: ({ type, data }) => <ExamForm type={type} data={data} />,
+  assignment: ({ type, data }) => <AssignmentForm type={type} data={data} />,
+  result: ({ type, data }) => <ResultForm type={type} data={data} />,
+  attendance: ({ type, data }) => <AttendanceForm type={type} data={data} />,
+  event: ({ type, data }) => <EventForm type={type} data={data} />,
+  announcement: ({ type, data }) => (
+    <AnnouncementForm type={type} data={data} />
+  ),
 };
 
 const renderIcon = (type: DialogActionType) => {
@@ -139,7 +189,14 @@ function FormDialog<T extends keyof FormDataMap>({
   type,
   data,
   id,
+  relativeData,
+  userId,
 }: FormDialogProps<T>) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const onClose = () => {
+    setIsOpen(false);
+  };
   const Form = () => {
     if (type === "delete" && id) {
       return (
@@ -155,12 +212,16 @@ function FormDialog<T extends keyof FormDataMap>({
     }
 
     if (type === "create" || type === "update") {
-      return forms[table] ? forms[table](type, data) : <>Form not found!</>;
+      return forms[table] ? (
+        forms[table]({ type, data, relativeData, onClose })
+      ) : (
+        <>Form not found!</>
+      );
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           size={"icon"}

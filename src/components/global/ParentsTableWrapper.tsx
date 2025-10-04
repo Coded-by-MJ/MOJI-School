@@ -2,24 +2,20 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { parentsData, role } from "@/lib/data";
-
 import { DataTable } from "@/components/global/DataTable";
 
 import FormDialog from "../forms/FormDialog";
+import { ParentTableDataType } from "@/types";
+import { UserRole } from "@prisma/client";
 
-type Parent = {
-  id: number;
-  name: string;
-  email?: string;
-  phone: string;
-  students: string[];
-  address: string;
+type Props = {
+  data: ParentTableDataType[];
+  userRole: UserRole | null;
 };
 
-function ParentsTableWrapper() {
-  const parentsActions: ColumnDef<Parent>[] =
-    role === "admin"
+function ParentsTableWrapper({ userRole, data }: Props) {
+  const parentsActions: ColumnDef<ParentTableDataType>[] =
+    userRole === "admin"
       ? [
           {
             header: "Actions",
@@ -32,12 +28,14 @@ function ParentsTableWrapper() {
                     type="update"
                     data={row.original}
                     id={row.original.id}
+                    userId={row.original.userId}
                   />{" "}
                   <FormDialog
                     table="parent"
                     type="delete"
                     data={row.original}
                     id={row.original.id}
+                    userId={row.original.userId}
                   />
                 </div>
               );
@@ -45,15 +43,15 @@ function ParentsTableWrapper() {
           },
         ]
       : [];
-  const columns: ColumnDef<Parent>[] = [
+  const columns: ColumnDef<ParentTableDataType>[] = [
     {
       header: "Info",
       id: "info",
       cell: ({ row }) => {
         return (
           <div className="flex flex-col">
-            <h3 className="font-semibold">{row.original.name}</h3>
-            <p className="text-xs text-gray-500">{row.original?.email}</p>
+            <h3 className="font-semibold">{row.original.user.name}</h3>
+            <p className="text-xs text-gray-500">{row.original.user.email}</p>
           </div>
         );
       },
@@ -62,7 +60,8 @@ function ParentsTableWrapper() {
       header: "Student Names",
       accessorKey: "students",
       cell: ({ row }) => {
-        return <span>{row.original.students.join(", ")}</span>;
+        const allStudents = row.original.students.map((c) => c.user.name);
+        return <span>{allStudents.join(", ") || "N/A"}</span>;
       },
     },
 
@@ -83,6 +82,6 @@ function ParentsTableWrapper() {
     ...parentsActions,
   ];
 
-  return <DataTable columns={columns} data={parentsData} />;
+  return <DataTable columns={columns} data={data} />;
 }
 export default ParentsTableWrapper;

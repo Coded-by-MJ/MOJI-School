@@ -19,34 +19,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  StudentOrTeacherFormSchemaType,
-  studentOrTeacherFormSchema,
-} from "@/types/zod-schemas";
+import { subjectFormSchema, SubjectFormSchemaType } from "@/types/zod-schemas";
 import { UploadCloud } from "lucide-react";
+import { SubjectTableDataType } from "@/types";
 
 const SubjectForm = ({
   type,
   data,
+  onClose,
 }: {
   type: "create" | "update";
-  data?: Partial<StudentOrTeacherFormSchemaType>;
+  data?: Partial<SubjectTableDataType>;
+  onClose: () => void;
 }) => {
-  const form = useForm<StudentOrTeacherFormSchemaType>({
-    resolver: zodResolver(studentOrTeacherFormSchema),
+  const form = useForm<SubjectFormSchemaType>({
+    resolver: zodResolver(subjectFormSchema),
     defaultValues: {
-      firstName: data?.firstName || "",
-      lastName: data?.lastName || "",
-      email: data?.email || "",
-      phone: data?.phone || "",
-      address: data?.address || "",
-      bloodType: data?.bloodType || "",
-      birthday: data?.birthday || "",
-      sex: data?.sex || "male",
+      name: data?.name || "",
     },
   });
 
-  const onSubmit = (values: StudentOrTeacherFormSchemaType) => {
+  const onSubmit = (values: SubjectFormSchemaType) => {
     console.log(values);
   };
 
@@ -58,169 +51,23 @@ const SubjectForm = ({
       >
         {/* Personal Section */}
         <span className="text-xs text-gray-400 font-medium">
-          Student Information
+          Subject Information
         </span>
         <div className="flex justify-between flex-wrap gap-4">
           <FormField
             control={form.control}
-            name="firstName"
+            name="name"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>First Name</FormLabel>
+              <FormItem className="w-full">
+                <FormLabel>Subject Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="First name" {...field} />
+                  <Input placeholder="Name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Last name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    readOnly={type === "update"}
-                    className="read-only:cursor-not-allowed read-only:opacity-50"
-                    placeholder="Email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <Input placeholder="Phone number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="Address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="birthday"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Birthday</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="bloodType"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Blood Type</FormLabel>
-                <FormControl>
-                  <Input placeholder="Blood type" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="sex"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Sex</FormLabel>
-                <Select
-                  defaultValue={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select sex" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* File Upload */}
-          <FormField
-            control={form.control}
-            name="img"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Upload Photo</FormLabel>
-                <FormControl>
-                  <div className="flex items-center gap-2">
-                    <label
-                      htmlFor="img"
-                      className="flex items-center gap-2 cursor-pointer text-sm text-primary"
-                    >
-                      <UploadCloud size={24} />
-                      <span>{field.value ? field.value.name : "Upload"}</span>
-                    </label>
-                    <input
-                      id="img"
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      className="invisible"
-                      onChange={(e) =>
-                        field.onChange(e.target.files?.[0] ?? null)
-                      }
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
         <Button type="submit" className="bg-primary text-secondary">

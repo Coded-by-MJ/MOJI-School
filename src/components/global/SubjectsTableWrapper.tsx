@@ -2,22 +2,20 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { role, subjectsData } from "@/lib/data";
-
 import { DataTable } from "@/components/global/DataTable";
 
 import FormDialog from "../forms/FormDialog";
+import { SubjectTableDataType } from "@/types";
+import { UserRole } from "@prisma/client";
 
-type Subject = {
-  id: number;
-  name: string;
-
-  teachers: string[];
+type Props = {
+  data: SubjectTableDataType[];
+  userRole: UserRole | null;
 };
 
-function SubjectsTableWrapper() {
-  const subjectsActions: ColumnDef<Subject>[] =
-    role === "admin"
+function SubjectsTableWrapper({ data, userRole }: Props) {
+  const subjectsActions: ColumnDef<SubjectTableDataType>[] =
+    userRole === "admin"
       ? [
           {
             header: "Actions",
@@ -44,7 +42,7 @@ function SubjectsTableWrapper() {
         ]
       : [];
 
-  const columns: ColumnDef<Subject>[] = [
+  const columns: ColumnDef<SubjectTableDataType>[] = [
     {
       header: "Subject Name",
       accessorKey: "name",
@@ -61,13 +59,14 @@ function SubjectsTableWrapper() {
       header: "Teachers",
       accessorKey: "teachers",
       cell: ({ row }) => {
-        return <span>{row.original.teachers.join(", ")}</span>;
+        const allTeachers = row.original.teachers.map((c) => c.user.name);
+        return <span>{allTeachers.join(", ") || "N/A"}</span>;
       },
     },
 
     ...subjectsActions,
   ];
 
-  return <DataTable columns={columns} data={subjectsData} />;
+  return <DataTable columns={columns} data={data} />;
 }
 export default SubjectsTableWrapper;

@@ -20,12 +20,12 @@ import { MdFormatListNumbered } from "react-icons/md";
 import { RiBookShelfLine } from "react-icons/ri";
 
 const sidebarMenuLinks: DashboardLink[] = [
-  {
-    icon: <Home strokeWidth={1.5} />,
-    title: "Home",
-    url: "/",
-    access: ["admin", "teacher", "student", "parent"],
-  },
+  // {
+  //   icon: <Home strokeWidth={1.5} />,
+  //   title: "Home",
+  //   url: "/",
+  //   access: ["admin", "teacher", "student", "parent"],
+  // },
   {
     icon: <GraduationCap strokeWidth={1.5} />,
     title: "Teachers",

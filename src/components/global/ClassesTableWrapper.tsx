@@ -2,22 +2,20 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { classesData, role } from "@/lib/data";
-
 import { DataTable } from "@/components/global/DataTable";
 import FormDialog from "../forms/FormDialog";
+import { ClassTableDataType, ClassTableRelativeData } from "@/types";
+import { UserRole } from "@prisma/client";
 
-type Class = {
-  id: number;
-  name: string;
-  capacity: number;
-  grade: number;
-  supervisor: string;
+type Props = {
+  data: ClassTableDataType[];
+  userRole: UserRole | null;
+  relativeData: ClassTableRelativeData;
 };
 
-function ClassesTableWrapper() {
-  const classesActions: ColumnDef<Class>[] =
-    role === "admin"
+function ClassesTableWrapper({ userRole, data, relativeData }: Props) {
+  const classesActions: ColumnDef<ClassTableDataType>[] =
+    userRole === "admin"
       ? [
           {
             header: "Actions",
@@ -30,6 +28,7 @@ function ClassesTableWrapper() {
                     type="update"
                     data={row.original}
                     id={row.original.id}
+                    relativeData={relativeData}
                   />{" "}
                   <FormDialog
                     table="class"
@@ -44,7 +43,7 @@ function ClassesTableWrapper() {
         ]
       : [];
 
-  const columns: ColumnDef<Class>[] = [
+  const columns: ColumnDef<ClassTableDataType>[] = [
     {
       header: "Class Name",
       accessorKey: "name",
@@ -69,21 +68,23 @@ function ClassesTableWrapper() {
       header: "Grade",
       accessorKey: "grade",
       cell: ({ row }) => {
-        return <span>{row.original.grade}</span>;
+        return <span>{row.original.grade.level}</span>;
       },
     },
 
     {
-      header: "Supervisor",
-      accessorKey: "supervisor",
+      header: "Supervisors",
+      accessorKey: "supervisors",
       cell: ({ row }) => {
-        return <span>{row.original.supervisor}</span>;
+        const supervisor = row.original.supervisor ? row.original.supervisor.user.name : "N/A"
+
+        return <span>{supervisor}</span>;
       },
     },
 
     ...classesActions,
   ];
 
-  return <DataTable columns={columns} data={classesData} />;
+  return <DataTable columns={columns} data={data} />;
 }
 export default ClassesTableWrapper;

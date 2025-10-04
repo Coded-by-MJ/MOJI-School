@@ -17,15 +17,26 @@ import { sidebarMenuLinks, sidebarOtherLinks } from "./Links";
 // import { LogoSvg } from "@/components/global/Logo";
 
 import Link from "next/link";
-import { UserRole } from "@/types";
+import { UserRole } from "@prisma/client";
+import { SessionType } from "@/lib/auth-types";
+import { LogoImage } from "../global/Logo";
+import { DashboardLink } from "@/types";
+import { Home } from "lucide-react";
 
 type Props = {
-  //   user: AuthUserType;
+  user: SessionType["user"];
 };
 
-function DashboardSidebar({}: Props) {
-  //   const userRole = user.role;
-  const userRole: UserRole = "admin";
+function DashboardSidebar({ user }: Props) {
+  const userRole = user.role as UserRole;
+
+  const home: DashboardLink = {
+    icon: <Home strokeWidth={1.5} />,
+    title: "Home",
+    url: `/${userRole}`,
+    access: ["admin", `${userRole}`],
+  };
+
   return (
     <Sidebar collapsible="icon" className="border-main-blue/50 bg-white!">
       <SidebarHeader className="px-0 py-2">
@@ -36,7 +47,7 @@ function DashboardSidebar({}: Props) {
               className="group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:pl-1! hover:bg-transparent group-data-[collapsible=icon]:size-12! h-12 items-center flex "
             >
               <Link href="/">
-                {/* <LogoSvg className="size-[38px]!" /> */}
+                <LogoImage className="size-10" />
                 <p className="text-sm normal-case font-bold">MOJI SCHOOL</p>
               </Link>
             </SidebarMenuButton>
@@ -51,6 +62,7 @@ function DashboardSidebar({}: Props) {
           </SidebarGroupLabel>
           <SidebarGroupContent className="p-2">
             <SidebarMenu className="gap-2">
+              <SidebarLink key={home.title} link={home} userRole={userRole} />
               {sidebarMenuLinks.map((link) => {
                 return (
                   <SidebarLink

@@ -1,21 +1,37 @@
 import DashboardSearchBar from "@/components/dashboard/DashboardSearchBar";
 import Pagination from "@/components/global/Pagination";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, ListFilter, Plus } from "lucide-react";
+import { SlidersHorizontal, ListFilter } from "lucide-react";
 import StudentsTableWrapper from "@/components/global/StudentsTableWrapper";
 import FormDialog from "@/components/forms/FormDialog";
-import { role } from "@/lib/data";
+import AllowedUserCompClient from "@/components/auth/AllowedUserCompClient";
+import { fetchStudentList } from "@/lib/query-actions";
+import {
+  StudentTableRelativeData,
+  StudentTableDataType,
+  TableSearchParams,
+} from "@/types";
 
-function StudentsListPage() {
+async function StudentsListPage({ searchParams }: PageProps<"/list/students">) {
+  const queryParams = await searchParams;
+  const filterParams: TableSearchParams = {
+    teacherId: queryParams.teacherId?.toString(),
+    page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
+    search: queryParams.search?.toString(),
+  };
+  const { data, count, relativeData } = await fetchStudentList<
+    StudentTableDataType[],
+    StudentTableRelativeData
+  >(filterParams);
   return (
     <section className="bg-muted gap-4 rounded-md flex-col flex flex-1">
-     <div className="flex p-4 w-full justify-between items-center">
+      <div className="flex p-4 w-full justify-between items-center">
         <h1 className="hidden md:block text-lg font-semibold">All Students</h1>
         <div className="flex w-max flex-1 md:justify-end  flex-col md:flex-row items-center gap-4">
           <div className="md:max-w-[15rem] w-full">
             <DashboardSearchBar
               searchKey="search"
-              placeHolder="Search for teacher"
+              placeHolder="Search for student"
             />
           </div>
           <div className="flex gap-4  items-center self-end">
@@ -25,14 +41,20 @@ function StudentsListPage() {
             <Button size={"icon"} className="rounded-full  bg-primary">
               <SlidersHorizontal className="size-4" />
             </Button>{" "}
-            {role === "admin" && <FormDialog type="create" table="student" />}
+            <AllowedUserCompClient allowedRoles={["admin"]}>
+              <FormDialog
+                type="create"
+                table="student"
+                relativeData={relativeData}
+              />
+            </AllowedUserCompClient>
           </div>
         </div>
       </div>
 
-      <StudentsTableWrapper />
+      <StudentsTableWrapper data={data} relativeData={relativeData} />
 
-      <Pagination />
+      <Pagination page={filterParams.page} count={count} />
     </section>
   );
 }

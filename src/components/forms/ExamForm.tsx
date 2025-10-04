@@ -19,10 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  StudentOrTeacherFormSchemaType,
-  studentOrTeacherFormSchema,
-} from "@/types/zod-schemas";
+import { teacherFormSchema, TeacherFormSchemaType } from "@/types/zod-schemas";
 import { UploadCloud } from "lucide-react";
 
 const ExamForm = ({
@@ -30,10 +27,10 @@ const ExamForm = ({
   data,
 }: {
   type: "create" | "update";
-  data?: Partial<StudentOrTeacherFormSchemaType>;
+  data?: Partial<TeacherFormSchemaType>;
 }) => {
-  const form = useForm<StudentOrTeacherFormSchemaType>({
-    resolver: zodResolver(studentOrTeacherFormSchema),
+  const form = useForm<TeacherFormSchemaType>({
+    resolver: zodResolver(teacherFormSchema),
     defaultValues: {
       firstName: data?.firstName || "",
       lastName: data?.lastName || "",
@@ -46,7 +43,7 @@ const ExamForm = ({
     },
   });
 
-  const onSubmit = (values: StudentOrTeacherFormSchemaType) => {
+  const onSubmit = (values: TeacherFormSchemaType) => {
     console.log(values);
   };
 

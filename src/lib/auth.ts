@@ -1,8 +1,12 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { openAPI, admin, createAuthMiddleware } from "better-auth/plugins";
+import {
+  openAPI,
+  admin as adminPlugin,
+  createAuthMiddleware,
+} from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
-import { APIError } from "better-auth/api";
+import { ac, admin, teacher, student, parent } from "./permissions";
 
 import prisma from "./prisma";
 import { ReturnedType } from "./auth-types";
@@ -94,8 +98,15 @@ export const auth = betterAuth({
 
   plugins: [
     openAPI(),
-    admin({
+    adminPlugin({
       defaultRole: "student",
+      ac,
+      roles: {
+        admin,
+        teacher,
+        student,
+        parent,
+      },
     }),
     nextCookies(),
   ], //api/auth/reference

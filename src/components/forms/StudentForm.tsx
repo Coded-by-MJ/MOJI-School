@@ -19,35 +19,83 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  StudentOrTeacherFormSchemaType,
-  studentOrTeacherFormSchema,
-} from "@/types/zod-schemas";
+import { studentFormSchema, StudentFormSchemaType } from "@/types/zod-schemas";
 import { UploadCloud } from "lucide-react";
+import { extractOrJoinName, renderClientError } from "@/utils/funcs";
+import { toast } from "sonner";
+import { createStudent, updateStudent } from "@/lib/mutation-actions";
+import { useState } from "react";
+import { StudentTableDataType, StudentTableRelativeData } from "@/types";
+import { Loader2 } from "lucide-react";
 
 const StudentForm = ({
   type,
   data,
+  relativeData,
+  onClose,
 }: {
   type: "create" | "update";
-  data?: Partial<StudentOrTeacherFormSchemaType>;
+  data?: Partial<StudentTableDataType>;
+  relativeData?: StudentTableRelativeData;
+  onClose: () => void;
 }) => {
-  const form = useForm<StudentOrTeacherFormSchemaType>({
-    resolver: zodResolver(studentOrTeacherFormSchema),
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<StudentFormSchemaType>({
+    resolver: zodResolver(studentFormSchema),
+    mode: "onChange",
     defaultValues: {
-      firstName: data?.firstName || "",
-      lastName: data?.lastName || "",
-      email: data?.email || "",
+      firstName: data?.user ? extractOrJoinName(data?.user.name)[0] : "",
+      lastName: data?.user ? extractOrJoinName(data?.user.name)[1] : "",
+      email: data?.user ? data?.user.email : "",
       phone: data?.phone || "",
       address: data?.address || "",
-      bloodType: data?.bloodType || "",
-      birthday: data?.birthday || "",
-      sex: data?.sex || "male",
+      bloodType: data?.bloodType,
+      birthday: data?.birthday ? new Date(data?.birthday) : undefined,
+      sex: data?.sex || "MALE",
     },
   });
 
-  const onSubmit = (values: StudentOrTeacherFormSchemaType) => {
-    console.log(values);
+  const handleCreate = async (values: StudentFormSchemaType) => {
+    setIsLoading(true);
+
+    try {
+      const msg = await createStudent(values);
+      toast[msg.type](msg.message);
+      if (msg.type === "success") {
+        onClose();
+      }
+    } catch (error) {
+      renderClientError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdate = async (values: StudentFormSchemaType) => {
+    setIsLoading(true);
+    const name = extractOrJoinName([values.firstName, values.lastName]);
+    try {
+      if (data && data.userId) {
+        const msg = await updateStudent(data?.userId, values);
+        toast[msg.type](msg.message);
+        if (msg.type === "success") {
+          onClose();
+        }
+      }
+    } catch (error) {
+      renderClientError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSubmit = (values: StudentFormSchemaType) => {
+    if (type === "create") {
+      handleCreate(values);
+    } else {
+      handleUpdate(values);
+    }
   };
 
   return (
@@ -56,16 +104,16 @@ const StudentForm = ({
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col gap-8"
       >
-        {/* Personal Section */}
-        <span className="text-xs text-gray-400 font-medium">
+        {/* Personal */}
+        <span className="text-xs text-secondary/80 font-medium">
           Student Information
         </span>
-        <div className="flex justify-between flex-wrap gap-4">
+        <div className="flex justify-between w-full flex-wrap gap-4">
           <FormField
             control={form.control}
             name="firstName"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
+              <FormItem className="w-[45%] md:w-[30%]">
                 <FormLabel>First Name</FormLabel>
                 <FormControl>
                   <Input placeholder="First name" {...field} />
@@ -79,7 +127,7 @@ const StudentForm = ({
             control={form.control}
             name="lastName"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
+              <FormItem className="w-[45%] md:w-[30%]">
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Last name" {...field} />
@@ -93,7 +141,7 @@ const StudentForm = ({
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
+              <FormItem className="w-[45%] md:w-[30%]">
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
@@ -107,12 +155,11 @@ const StudentForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="phone"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
+              <FormItem className="w-[45%] md:w-[30%]">
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
                   <Input placeholder="Phone number" {...field} />
@@ -126,7 +173,7 @@ const StudentForm = ({
             control={form.control}
             name="address"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
+              <FormItem className="w-[45%] md:w-[30%]">
                 <FormLabel>Address</FormLabel>
                 <FormControl>
                   <Input placeholder="Address" {...field} />
@@ -140,10 +187,18 @@ const StudentForm = ({
             control={form.control}
             name="birthday"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
+              <FormItem className="w-[45%] md:w-[30%]">
                 <FormLabel>Birthday</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input
+                    type="date"
+                    value={
+                      field.value
+                        ? field.value.toISOString().split("T")[0]
+                        : undefined
+                    }
+                    onChange={(e) => field.onChange(new Date(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -154,7 +209,7 @@ const StudentForm = ({
             control={form.control}
             name="bloodType"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
+              <FormItem className="w-[45%] md:w-[30%]">
                 <FormLabel>Blood Type</FormLabel>
                 <FormControl>
                   <Input placeholder="Blood type" {...field} />
@@ -168,7 +223,7 @@ const StudentForm = ({
             control={form.control}
             name="sex"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
+              <FormItem className="w-[45%] md:w-[30%]">
                 <FormLabel>Sex</FormLabel>
                 <Select
                   defaultValue={field.value}
@@ -180,8 +235,8 @@ const StudentForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="MALE">Male</SelectItem>
+                    <SelectItem value="FEMALE">Female</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -194,7 +249,7 @@ const StudentForm = ({
             control={form.control}
             name="img"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
+              <FormItem className="w-[45%] md:w-[30%]">
                 <FormLabel>Upload Photo</FormLabel>
                 <FormControl>
                   <div className="flex items-center gap-2">
@@ -223,8 +278,16 @@ const StudentForm = ({
           />
         </div>
 
-        <Button type="submit" className="bg-primary text-secondary">
-          {type === "create" ? "Create" : "Update"}
+        <Button
+          type="submit"
+          className="bg-primary text-secondary"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <span>{type === "create" ? "Create" : "Update"}</span>
+          )}
         </Button>
       </form>
     </Form>

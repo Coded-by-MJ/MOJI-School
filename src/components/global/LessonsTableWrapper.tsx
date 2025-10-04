@@ -2,21 +2,18 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { lessonsData, role } from "@/lib/data";
 import { DataTable } from "@/components/global/DataTable";
 import FormDialog from "../forms/FormDialog";
+import { UserRole } from "@prisma/client";
+import { LessonTableDataType } from "@/types";
 
-type Lesson = {
-  id: number;
-  class: string;
-  subject: string;
-  teacher: string;
-};
+c
 
-function LessonsTableWrapper() {
-  const lessonsActions: ColumnDef<Lesson>[] = ["teacher", "admin"].includes(
-    role
-  )
+function LessonsTableWrapper({ data, userRole }: Props) {
+  const lessonsActions: ColumnDef<LessonTableDataType>[] = [
+    "teacher",
+    "admin",
+  ].includes(userRole || "")
     ? [
         {
           header: "Actions",
@@ -42,24 +39,16 @@ function LessonsTableWrapper() {
         },
       ]
     : [];
-  const columns: ColumnDef<Lesson>[] = [
+  const columns: ColumnDef<LessonTableDataType>[] = [
     {
       header: "Subject Name",
       accessorKey: "subject",
       cell: ({ row }) => {
         return (
           <div className="flex flex-col">
-            <h3 className="font-semibold">{row.original.subject}</h3>
+            <h3 className="font-semibold">{row.original.subject.name}</h3>
           </div>
         );
-      },
-    },
-
-    {
-      header: "Class",
-      accessorKey: "class",
-      cell: ({ row }) => {
-        return <span>{row.original.class}</span>;
       },
     },
 
@@ -67,13 +56,13 @@ function LessonsTableWrapper() {
       header: "Teacher",
       accessorKey: "teacher",
       cell: ({ row }) => {
-        return <span>{row.original.teacher}</span>;
+        return <span>{row.original.teacher.user.name}</span>;
       },
     },
 
     ...lessonsActions,
   ];
 
-  return <DataTable columns={columns} data={lessonsData} />;
+  return <DataTable columns={columns} data={data} />;
 }
 export default LessonsTableWrapper;

@@ -42,20 +42,73 @@ export const forgotPasswordSchema = z.object({
     .min(1, { message: "Email is required" }),
 });
 
-export const studentOrTeacherFormSchema = z.object({
+export const teacherFormSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required!" }),
   lastName: z.string().min(1, { message: "Last name is required!" }),
   email: z.string().min(1, { message: "Email is required!" }),
   phone: z.string().min(1, { message: "Phone is required!" }),
   address: z.string().min(1, { message: "Address is required!" }),
-  bloodType: z.string().min(1, { message: "Blood Type is required!" }),
-  birthday: z.string().min(1, { message: "Birthday is required!" }), // keep as string for Input[type=date]
-  sex: z.enum(["male", "female"], { message: "Sex is required!" }),
-  img: validateImageFile(),
+  bloodType: z
+    .string()
+    .regex(/^(A|B|AB|O)[+-]$/, { message: "Invalid blood type!" }),
+  birthday: z.date({ message: "Birthday is required!" }),
+  sex: z.enum(["MALE", "FEMALE"], { message: "Sex is required!" }),
+  img: validateImageFile().optional(),
+});
+export const parentFormSchema = z.object({
+  firstName: z.string().min(1, { message: "First name is required!" }),
+  lastName: z.string().min(1, { message: "Last name is required!" }),
+  email: z.string().min(1, { message: "Email is required!" }),
+  phone: z.string().min(1, { message: "Phone is required!" }),
+  address: z.string().min(1, { message: "Address is required!" }),
+  img: validateImageFile().optional(),
+});
+export const studentFormSchema = z.object({
+  firstName: z.string().min(1, { message: "First name is required!" }),
+  lastName: z.string().min(1, { message: "Last name is required!" }),
+  email: z.string().min(1, { message: "Email is required!" }),
+  phone: z.string().min(1, { message: "Phone is required!" }).optional(),
+  address: z.string().min(1, { message: "Address is required!" }),
+  bloodType: z
+    .string()
+    .regex(/^(A|B|AB|O)[+-]$/, { message: "Invalid blood type!" }),
+  birthday: z.date({ message: "Birthday is required!" }),
+  sex: z.enum(["MALE", "FEMALE"], { message: "Sex is required!" }),
+  img: validateImageFile().optional(),
+  parentId: z.string().min(1, { message: "Parent ID is required!" }),
+  classId: z.string().min(1, { message: "Class ID is required!" }),
+  gradeId: z.string().min(1, { message: "Grade ID is required!" }),
+});
+export const classFormSchema = z.object({
+  name: z.string().min(1, { message: "name is required!" }),
+  capacity: z.coerce.number({ message: "Capacity must be an Integer" }),
+  supervisorId: z.string().min(1, { message: "Supervisor ID is required!" }),
+  gradeId: z.string().min(1, { message: "Grade ID is required!" }),
 });
 
-// Type inference
+export const gradeFormSchema = z.object({
+  level: z.int({ message: "Level must be an Integer" }),
+});
+export const subjectFormSchema = z.object({
+  name: z.string().min(1, { message: "name is required!" }),
+});
 
+export const lessonFormSchema = z
+  .object({
+    name: z.string().min(1, { message: "name is required!" }),
+    startTime: z.date({ message: "Start Time is required!" }),
+    endTime: z.date({ message: "End Time is required!" }),
+    day: z.enum(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"], {
+      message: "Day is required!",
+    }),
+    teacherId: z.string().min(1, { message: "Teacher ID is required!" }),
+    classId: z.string().min(1, { message: "Class ID is required!" }),
+    subjectId: z.string().min(1, { message: "Subject ID is required!" }),
+  })
+  .refine((data) => data.startTime < data.endTime, {
+    message: "Start time must be earlier than end time",
+    path: ["endTime"], // error shows under endTime field
+  });
 export function validateImageFiles() {
   const maxUploadSize = 2 * 1024 * 1024; // 2MB
   const acceptedFileTypes = [
@@ -119,6 +172,10 @@ export type SignUpSchemaType = z.infer<typeof signUpSchema>;
 export type SignInSchemaType = z.infer<typeof signInSchema>;
 export type ResetPasswordSchemaType = z.infer<typeof resetPasswordSchema>;
 export type ForgotPasswordSchemaType = z.infer<typeof forgotPasswordSchema>;
-export type StudentOrTeacherFormSchemaType = z.infer<
-  typeof studentOrTeacherFormSchema
->;
+export type StudentFormSchemaType = z.infer<typeof studentFormSchema>;
+export type TeacherFormSchemaType = z.infer<typeof teacherFormSchema>;
+export type ParentFormSchemaType = z.infer<typeof parentFormSchema>;
+export type LessonFormSchemaType = z.infer<typeof lessonFormSchema>;
+export type GradeFormSchemaType = z.infer<typeof gradeFormSchema>;
+export type ClassFormSchemaType = z.infer<typeof classFormSchema>;
+export type SubjectFormSchemaType = z.infer<typeof subjectFormSchema>;
