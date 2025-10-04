@@ -8,13 +8,13 @@ import { DataTable } from "@/components/global/DataTable";
 import { Button } from "../ui/button";
 import { Eye } from "lucide-react";
 import FormDialog from "../forms/FormDialog";
-import { StudentTableDataType, StudentTableRelativeData} from "@/types";
+import { StudentTableDataType, StudentTableRelativeData } from "@/types";
 import { extractId, getDefaultImage } from "@/utils/funcs";
 import AllowedUserCompClient from "../auth/AllowedUserCompClient";
 
 type Props = {
   data: StudentTableDataType[];
-   relativeData: StudentTableRelativeData
+  relativeData: StudentTableRelativeData;
 };
 
 function StudentsTableWrapper({ data }: Props) {
@@ -74,7 +74,7 @@ function StudentsTableWrapper({ data }: Props) {
     },
     {
       header: "Actions",
-      id: "action",
+      id: "actions",
       cell: ({ row }) => {
         return (
           <div className="flex items-center gap-2">

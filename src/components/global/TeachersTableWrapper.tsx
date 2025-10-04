@@ -82,7 +82,7 @@ function TeachersTableWrapper({ data }: Props) {
     },
     {
       header: "Actions",
-      id: "action",
+      id: "actions",
       cell: ({ row }) => {
         return (
           <div className="flex items-center gap-2">

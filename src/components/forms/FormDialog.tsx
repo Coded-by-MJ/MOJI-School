@@ -230,7 +230,7 @@ function FormDialog<T extends keyof FormDataMap>({
           {renderIcon(type)}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="md:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="capitalize">
             {type} {table}

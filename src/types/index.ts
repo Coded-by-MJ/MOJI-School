@@ -112,7 +112,14 @@ export interface ClassTableRelativeData {
 
 export interface StudentTableRelativeData {
   grades: Grade[];
-  classes: Pick<Class, "id" | "capacity" | "name">;
+  classes: {
+    id: string;
+    _count: {
+      students: number;
+    };
+    name: string;
+    capacity: number;
+  }[];
   parents: {
     id: string;
     user: {

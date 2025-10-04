@@ -41,6 +41,10 @@ const StudentForm = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
+  const grades = relativeData?.grades || [];
+  const parents = relativeData?.parents || [];
+  const classes = relativeData?.classes || [];
+
   const form = useForm<StudentFormSchemaType>({
     resolver: zodResolver(studentFormSchema),
     mode: "onChange",
@@ -102,7 +106,7 @@ const StudentForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-8"
+        className="flex w-full flex-col gap-8"
       >
         {/* Personal */}
         <span className="text-xs text-secondary/80 font-medium">
@@ -122,7 +126,6 @@ const StudentForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="lastName"
@@ -136,7 +139,6 @@ const StudentForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="email"
@@ -168,7 +170,6 @@ const StudentForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="address"
@@ -182,7 +183,6 @@ const StudentForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="birthday"
@@ -204,7 +204,6 @@ const StudentForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="bloodType"
@@ -218,7 +217,6 @@ const StudentForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="sex"
@@ -243,7 +241,89 @@ const StudentForm = ({
               </FormItem>
             )}
           />
-
+          <FormField
+            control={form.control}
+            name="parentId"
+            render={({ field }) => (
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Parent</FormLabel>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {parents.map((parent) => (
+                      <SelectItem key={parent.id} value={parent.id}>
+                        {parent.user.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />{" "}
+          <FormField
+            control={form.control}
+            name="classId"
+            render={({ field }) => (
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Class</FormLabel>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {classes.map((classItem) => (
+                      <SelectItem key={classItem.id} value={classItem.id}>
+                        ({classItem.name} -{" "}
+                        {classItem._count.students + "/" + classItem.capacity}{" "}
+                        Capacity)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />{" "}
+          <FormField
+            control={form.control}
+            name="gradeId"
+            render={({ field }) => (
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Grade</FormLabel>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {grades.map((grade) => (
+                      <SelectItem key={grade.id} value={grade.id}>
+                        {grade.level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           {/* File Upload */}
           <FormField
             control={form.control}

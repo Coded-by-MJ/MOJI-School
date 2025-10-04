@@ -240,9 +240,23 @@ export const createStudent = async (
   data: StudentFormSchemaType
 ): Promise<ActionState> => {
   const name = extractOrJoinName([data.firstName, data.lastName]);
-  const existingStudent = await prisma.student.findUnique({
-    where: { phone: data.phone },
-  });
+
+  const [existingStudent, classItem] = await prisma.$transaction([
+    prisma.student.findUnique({
+      where: { phone: data.phone },
+    }),
+    prisma.class.findUnique({
+      where: { id: data.classId },
+      include: { _count: { select: { students: true } } },
+    }),
+  ]);
+
+  if (classItem && classItem.capacity === classItem._count.students) {
+    return {
+      message: "The selected class has reached it's full capacity.",
+      type: "error",
+    };
+  }
   if (existingStudent) {
     return {
       message: "A student with this phone number already exists.",

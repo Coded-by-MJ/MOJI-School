@@ -120,6 +120,7 @@ export async function fetchStudentList<T, R>(
             id: true,
             name: true,
             capacity: true,
+            _count: { select: { students: true } },
           },
         }),
         prisma.parent.findMany({
