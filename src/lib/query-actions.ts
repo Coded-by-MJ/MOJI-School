@@ -19,9 +19,9 @@ const renderError = (error: unknown) => {
   };
 };
 
-export async function fetchTeacherList<T>(
+export async function fetchTeacherList<T, R>(
   params: TableSearchParams
-): Promise<{ data: T; count: number }> {
+): Promise<{ data: T; count: number; relativeData: R }> {
   const whereClause: Prisma.TeacherWhereInput = {
     ...(params.classId
       ? {
@@ -46,13 +46,16 @@ export async function fetchTeacherList<T>(
 
   try {
     await isUserAllowed(["admin", "teacher"]);
-    const [teachers, count] = await prisma.$transaction([
+    const [teachers, count, subjects] = await prisma.$transaction([
       prisma.teacher.findMany({
         where: whereClause,
         include: {
           user: true,
           classes: true,
           subjects: true,
+        },
+        orderBy: {
+          updatedAt: "desc",
         },
         take: ITEMS_PER_PAGE,
         skip: ITEMS_PER_PAGE * (params.page - 1),
@@ -61,17 +64,29 @@ export async function fetchTeacherList<T>(
       prisma.teacher.count({
         where: whereClause,
       }),
+      prisma.subject.findMany({
+        select: {
+          id: true,
+          name: true,
+        },
+      }),
     ]);
 
     return {
       data: teachers as T,
       count,
+      relativeData: {
+        subjects,
+      } as R,
     };
   } catch (error) {
     renderError(error);
     return {
       data: [] as T,
       count: 0,
+      relativeData: {
+        subjects: [],
+      } as R,
     };
   }
 }
@@ -111,6 +126,9 @@ export async function fetchStudentList<T, R>(
             user: true,
             class: true,
             grade: true,
+          },
+          orderBy: {
+            updatedAt: "desc",
           },
         }),
         prisma.student.count({ where: whereClause }),
@@ -186,6 +204,9 @@ export async function fetchParentList<T>(
             },
           },
         },
+        orderBy: {
+          updatedAt: "desc",
+        },
       }),
       prisma.parent.count({ where: whereClause }),
     ]);
@@ -204,9 +225,14 @@ export async function fetchParentList<T>(
     };
   }
 }
-export async function fetchSubjectList<T>(
+export async function fetchSubjectList<T, R>(
   params: TableSearchParams
-): Promise<{ data: T; count: number; userRole: UserRole | null }> {
+): Promise<{
+  data: T;
+  count: number;
+  userRole: UserRole | null;
+  relativeData: R;
+}> {
   const whereClause: Prisma.SubjectWhereInput = {
     ...(params.search
       ? {
@@ -219,24 +245,39 @@ export async function fetchSubjectList<T>(
   };
   try {
     const user = await isUserAllowed(["admin"]);
-    const [subjects, count] = await prisma.$transaction([
+    const [subjects, count, teachers] = await prisma.$transaction([
       prisma.subject.findMany({
         where: whereClause,
         include: {
           teachers: {
             select: {
+              id: true,
               user: true,
             },
           },
         },
+        orderBy: {
+          updatedAt: "desc",
+        },
       }),
       prisma.subject.count({ where: whereClause }),
+      prisma.teacher.findMany({
+        select: {
+          id: true,
+          user: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
     ]);
 
     return {
       data: subjects as T,
       count,
       userRole: user.role as UserRole,
+      relativeData: { teachers } as R,
     };
   } catch (error) {
     renderError(error);
@@ -244,6 +285,9 @@ export async function fetchSubjectList<T>(
       data: [] as T,
       count: 0,
       userRole: null,
+      relativeData: {
+        teachers: [],
+      } as R,
     };
   }
 }
@@ -284,6 +328,9 @@ export async function fetchClassList<T, R>(
           },
           grade: true,
         },
+        orderBy: {
+          updatedAt: "desc",
+        },
       }),
       prisma.class.count({ where: whereClause }),
       prisma.grade.findMany(),
@@ -322,9 +369,14 @@ export async function fetchClassList<T, R>(
   }
 }
 
-export async function fetchLessonList<T>(
+export async function fetchLessonList<T, R>(
   params: TableSearchParams
-): Promise<{ data: T; count: number; userRole: UserRole | null }> {
+): Promise<{
+  data: T;
+  count: number;
+  userRole: UserRole | null;
+  relativeData: R;
+}> {
   const whereClause: Prisma.LessonWhereInput = {
     ...(params.classId
       ? {
@@ -357,30 +409,61 @@ export async function fetchLessonList<T>(
   };
   try {
     const user = await isUserAllowed(["admin", "teacher"]);
-    const [lessons, count] = await prisma.$transaction([
-      prisma.lesson.findMany({
-        where: whereClause,
-        include: {
-          subject: { select: { name: true } },
-          class: { select: { name: true } },
-          teacher: {
-            select: {
-              user: {
-                select: {
-                  name: true,
+    const [lessons, count, teachers, subjects, classes] =
+      await prisma.$transaction([
+        prisma.lesson.findMany({
+          where: whereClause,
+          include: {
+            subject: { select: { name: true } },
+            class: { select: { name: true } },
+            teacher: {
+              select: {
+                user: {
+                  select: {
+                    name: true,
+                  },
                 },
               },
             },
           },
-        },
-      }),
-      prisma.lesson.count({ where: whereClause }),
-    ]);
+          orderBy: {
+            updatedAt: "desc",
+          },
+        }),
+        prisma.lesson.count({ where: whereClause }),
+        prisma.teacher.findMany({
+          select: {
+            id: true,
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        }),
+        prisma.subject.findMany({
+          select: {
+            id: true,
+            name: true,
+          },
+        }),
+        prisma.class.findMany({
+          select: {
+            id: true,
+            name: true,
+          },
+        }),
+      ]);
 
     return {
       data: lessons as T,
       count,
       userRole: user.role as UserRole,
+      relativeData: {
+        teachers,
+        subjects,
+        classes,
+      } as R,
     };
   } catch (error) {
     renderError(error);
@@ -388,6 +471,11 @@ export async function fetchLessonList<T>(
       data: [] as T,
       count: 0,
       userRole: null,
+      relativeData: {
+        teachers: [],
+        subjects: [],
+        classes: [],
+      } as R,
     };
   }
 }
@@ -408,6 +496,9 @@ export async function fetchRelativeAdminData<T>(): Promise<{
             },
           },
         },
+        orderBy: {
+          updatedAt: "desc",
+        },
       }),
       prisma.parent.findMany({
         include: {
@@ -416,6 +507,9 @@ export async function fetchRelativeAdminData<T>(): Promise<{
               name: true,
             },
           },
+        },
+        orderBy: {
+          updatedAt: "desc",
         },
       }),
     ]);

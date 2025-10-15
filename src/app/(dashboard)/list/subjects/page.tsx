@@ -5,7 +5,11 @@ import { SlidersHorizontal, ListFilter } from "lucide-react";
 import SubjectsTableWrapper from "@/components/global/SubjectsTableWrapper";
 import FormDialog from "@/components/forms/FormDialog";
 
-import { SubjectTableDataType, TableSearchParams } from "@/types";
+import {
+  SubjectTableDataType,
+  SubjectTableRelativeData,
+  TableSearchParams,
+} from "@/types";
 import { fetchSubjectList } from "@/lib/query-actions";
 import AllowedUserCompClient from "@/components/auth/AllowedUserCompClient";
 
@@ -15,8 +19,9 @@ async function SubjectsListPage({ searchParams }: PageProps<"/list/subjects">) {
     page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
     search: queryParams.search?.toString(),
   };
-  const { userRole, data, count } = await fetchSubjectList<
-    SubjectTableDataType[]
+  const { userRole, data, count, relativeData } = await fetchSubjectList<
+    SubjectTableDataType[],
+    SubjectTableRelativeData
   >(filterParams);
   return (
     <section className="bg-muted gap-4 rounded-md flex-col flex flex-1">
@@ -37,13 +42,13 @@ async function SubjectsListPage({ searchParams }: PageProps<"/list/subjects">) {
               <SlidersHorizontal className="size-4" />
             </Button>{" "}
             <AllowedUserCompClient allowedRoles={["admin"]}>
-              <FormDialog type="create" table="subject" />
+              <FormDialog type="create" table="subject" relativeData={relativeData} />
             </AllowedUserCompClient>
           </div>
         </div>
       </div>
 
-      <SubjectsTableWrapper data={data} userRole={userRole} />
+      <SubjectsTableWrapper data={data} userRole={userRole}  relativeData={relativeData} />
 
       <Pagination page={filterParams.page} count={count} />
     </section>

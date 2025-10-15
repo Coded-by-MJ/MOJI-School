@@ -83,10 +83,10 @@ export type ParentTableDataType = Parent & {
     }[];
 };
 export type SubjectTableDataType = Subject & {
-  teachers: Teacher &
-    {
-      user: User;
-    }[];
+  teachers: {
+    id: string;
+    user: User;
+  }[];
 };
 
 export type ClassTableDataType = Class & {
@@ -100,6 +100,18 @@ export type ClassTableDataType = Class & {
     | null;
 };
 
+export type LessonTableDataType = Lesson & {
+  class: Grade;
+  subject: {
+    name: string;
+  };
+  teacher: {
+    user: {
+      name: string;
+    };
+  };
+};
+
 export interface ClassTableRelativeData {
   grades: Grade[];
   teachers: {
@@ -110,6 +122,14 @@ export interface ClassTableRelativeData {
   }[];
 }
 
+export interface TeacherTableRelativeData {
+  subjects: {
+    id: string;
+
+    name: string;
+    capacity: number;
+  }[];
+}
 export interface StudentTableRelativeData {
   grades: Grade[];
   classes: {
@@ -127,15 +147,27 @@ export interface StudentTableRelativeData {
     };
   }[];
 }
-
-export type LessonTableDataType = Lesson & {
-  class: Grade;
-  subject: {
-    name: string;
-  };
-  teacher: {
+export interface SubjectTableRelativeData {
+  teachers: {
+    id: string;
     user: {
       name: string;
     };
-  };
-};
+  }[];
+}
+export interface LessonTableRelativeData {
+  subjects: {
+    id: string;
+    name: string;
+  }[],
+  classes: {
+    id: string;
+    name: string;
+  }[];
+  teachers: {
+    id: string;
+    user: {
+      name: string;
+    };
+  }[];
+}

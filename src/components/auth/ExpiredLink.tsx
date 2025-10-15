@@ -8,11 +8,11 @@ function ExpiredLink() {
       <div className="flex flex-col justify-center items-center gap-2">
         <TriangleAlert className="size-14 text-red-500" />
 
-        <h1 className="text-center text-secondary  text-2xl font-bold">
+        <h1 className="text-center text-primary  text-2xl font-bold">
           Link Expired or Invalid
         </h1>
       </div>
-      <p className="text-secondary/80 text-center text-base ">
+      <p className="text-primary text-center text-base ">
         The password reset link is no longer valid. It may have expired or
         already been used. Please request a new link to reset your password.
       </p>
@@ -21,7 +21,7 @@ function ExpiredLink() {
         <Button
           type="button"
           asChild
-          className="text-secondary bg-primary h-11"
+          className="text-primary bg-primary h-11"
         >
           <Link href="/forgot-password">Request New Link</Link>
         </Button>{" "}

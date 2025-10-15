@@ -48,7 +48,7 @@ function SignInForm() {
           setIsLoading(true);
         },
         onSuccess: async (ctx) => {
-          if (!ctx.data.user.isPasswordResetRequired) {
+          if (ctx.data.user.isPasswordResetRequired) {
             push("/forgot-password");
             toast.error("Please Reset Your Password First.");
           } else {

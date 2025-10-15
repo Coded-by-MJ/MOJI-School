@@ -111,6 +111,8 @@ model Student {
   results     Result[]
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   birthday    DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@index([userId])
   @@map("student")
@@ -154,8 +156,10 @@ model Grade {
   id    String @id @default(uuid())
   level Int    @unique
 
-  students Student[]
-  classes  Class[]
+  students  Student[]
+  classes   Class[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Class {
@@ -170,13 +174,17 @@ model Class {
   grade         Grade          @relation(fields: [gradeId], references: [id])
   events        Event[]
   announcements Announcement[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Subject {
-  id       String    @id @default(uuid())
-  name     String    @unique
-  teachers Teacher[]
-  lessons  Lesson[]
+  id        String    @id @default(uuid())
+  name      String    @unique
+  teachers  Teacher[]
+  lessons   Lesson[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Lesson {
@@ -195,6 +203,8 @@ model Lesson {
   exams       Exam[]
   assignments Assignment[]
   attendances Attendance[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Exam {
@@ -203,9 +213,11 @@ model Exam {
   startTime DateTime
   endTime   DateTime
 
-  lessonId String
-  lesson   Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  results  Result[]
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  results   Result[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Assignment {
@@ -214,9 +226,11 @@ model Assignment {
   startDate DateTime
   dueDate   DateTime
 
-  lessonId String
-  lesson   Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  results  Result[]
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  results   Result[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Result {
@@ -229,6 +243,8 @@ model Result {
   assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   studentId    String
   student      Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model Attendance {
@@ -237,9 +253,11 @@ model Attendance {
   present Boolean
 
   studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   lessonId  String
-  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Event {
@@ -249,8 +267,10 @@ model Event {
   startTime   DateTime
   endTime     DateTime
 
-  classId String?
-  class   Class?  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   String?
+  class     Class?   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Announcement {
@@ -259,6 +279,8 @@ model Announcement {
   description String
   date        DateTime
 
-  classId String?
-  class   Class?  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   String?
+  class     Class?   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

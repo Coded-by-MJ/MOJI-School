@@ -25,19 +25,25 @@ import { extractOrJoinName, renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
 import { createTeacher, updateTeacher } from "@/lib/mutation-actions";
 import { useState } from "react";
-import { TeacherTableDataType } from "@/types";
+import { TeacherTableDataType, TeacherTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
 
 const TeacherForm = ({
   type,
   data,
   onClose,
+  relativeData,
 }: {
   type: "create" | "update";
   data?: Partial<TeacherTableDataType>;
   onClose: () => void;
+  relativeData?: TeacherTableRelativeData;
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+
+  const selectedSubjects =
+    data && data.subjects ? data?.subjects.map((s) => s.id) : [];
+      const subjects = relativeData?.subjects || [];
 
   const form = useForm<TeacherFormSchemaType>({
     resolver: zodResolver(teacherFormSchema),
@@ -51,8 +57,11 @@ const TeacherForm = ({
       bloodType: data?.bloodType,
       birthday: data?.birthday ? new Date(data?.birthday) : undefined,
       sex: data?.sex || "MALE",
+      subjects: selectedSubjects,
     },
   });
+
+
 
   const handleCreate = async (values: TeacherFormSchemaType) => {
     setIsLoading(true);
@@ -118,7 +127,6 @@ const TeacherForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="lastName"
@@ -132,7 +140,6 @@ const TeacherForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="email"
@@ -164,7 +171,6 @@ const TeacherForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="address"
@@ -178,7 +184,6 @@ const TeacherForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="birthday"
@@ -200,7 +205,6 @@ const TeacherForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="bloodType"
@@ -214,7 +218,6 @@ const TeacherForm = ({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="sex"
@@ -239,7 +242,59 @@ const TeacherForm = ({
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="subjects"
+            render={({ field }) => (
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Subject</FormLabel>
+                <FormControl>
+                  <select
+                    defaultValue={field.value || []}
+                    onChange={(e) => {
+                      const selectedValues = Array.from(
+                        e.target.selectedOptions,
+                        (opt) => opt.value
+                      );
+                      const prev = field.value || [];
 
+                      // merge both arrays
+                      const merged = [...prev, ...selectedValues];
+
+                      // remove any values that appear twice
+                      const final = merged.filter(
+                        (val, _, arr) =>
+                          arr.indexOf(val) === arr.lastIndexOf(val)
+                      );
+
+                      field.onChange(final);
+                    }}
+                    aria-placeholder={"Select"}
+                    multiple
+                  >
+                    {subjects.map((subject) => {
+                      const isSelected = field.value?.includes(subject.id);
+
+                      return (
+                        <option
+                          key={subject.id}
+                          value={subject.id}
+                          style={{
+                            backgroundColor: isSelected ? "#e0f2fe" : "white", // light blue for selected
+                            color: isSelected ? "#0369a1" : "#111", // darker text
+                            fontWeight: isSelected ? "600" : "400",
+                          }}
+                        >
+                          {subject.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />{" "}
           {/* File Upload */}
           <FormField
             control={form.control}

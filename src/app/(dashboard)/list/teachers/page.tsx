@@ -16,9 +16,10 @@ async function TeachersListPage({ searchParams }: PageProps<"/list/teachers">) {
     page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
     search: queryParams.search?.toString(),
   };
-  const { data, count } = await fetchTeacherList<TeacherTableDataType[]>(
-    filterParams
-  );
+  const { data, count, relativeData } = await fetchTeacherList<
+    TeacherTableDataType[],
+    TeacherTableDataType
+  >(filterParams);
   return (
     <section className="bg-muted gap-4 rounded-md  flex-col flex flex-1">
       <div className="flex p-4 w-full justify-between items-center">
@@ -38,7 +39,11 @@ async function TeachersListPage({ searchParams }: PageProps<"/list/teachers">) {
               <SlidersHorizontal className="size-4" />
             </Button>{" "}
             <AllowedUserCompClient allowedRoles={["admin"]}>
-              <FormDialog type="create" table="teacher" />
+              <FormDialog
+                type="create"
+                table="teacher"
+                relativeData={relativeData}
+              />
             </AllowedUserCompClient>
           </div>
         </div>

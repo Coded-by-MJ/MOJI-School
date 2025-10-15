@@ -5,7 +5,7 @@ import LessonsTableWrapper from "@/components/global/LessonsTableWrapper";
 import Pagination from "@/components/global/Pagination";
 import { Button } from "@/components/ui/button";
 import { fetchLessonList } from "@/lib/query-actions";
-import { LessonTableDataType, TableSearchParams } from "@/types";
+import { LessonTableDataType, LessonTableRelativeData, TableSearchParams } from "@/types";
 import { SlidersHorizontal, ListFilter } from "lucide-react";
 
 async function LessonsListPage({ searchParams }: PageProps<"/list/lessons">) {
@@ -15,8 +15,8 @@ async function LessonsListPage({ searchParams }: PageProps<"/list/lessons">) {
     page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
     search: queryParams.search?.toString(),
   };
-  const { data, count, userRole } = await fetchLessonList<
-    LessonTableDataType[]
+  const { data, count, userRole, relativeData } = await fetchLessonList<
+    LessonTableDataType[], LessonTableRelativeData
   >(filterParams);
   return (
     <section className="bg-muted gap-4 rounded-md  flex-col flex flex-1">
@@ -37,13 +37,13 @@ async function LessonsListPage({ searchParams }: PageProps<"/list/lessons">) {
               <SlidersHorizontal className="size-4" />
             </Button>{" "}
             <AllowedUserCompClient allowedRoles={["admin"]}>
-              <FormDialog type="create" table="lesson" />
+              <FormDialog type="create" table="lesson" relativeData={relativeData} />
             </AllowedUserCompClient>
           </div>
         </div>
       </div>
 
-      <LessonsTableWrapper data={data} userRole={userRole} />
+      <LessonsTableWrapper data={data} userRole={userRole} relativeData={relativeData} />
 
       <Pagination page={filterParams.page} count={count} />
     </section>

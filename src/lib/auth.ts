@@ -20,6 +20,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
     sendResetPassword: async ({ user, url }) => {
+      console.log(url);
       // const resetLink = `${process.env.BETTER_AUTH_URL}/api/auth/reset-password/${token}?callbackURL=/reset-password`;
       //   await sendResetPasswordEmailAction({
       //     email: user.email,

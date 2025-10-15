@@ -5,11 +5,15 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/global/DataTable";
 import FormDialog from "../forms/FormDialog";
 import { UserRole } from "@prisma/client";
-import { LessonTableDataType } from "@/types";
+import { LessonTableDataType, LessonTableRelativeData } from "@/types";
 
-c
+type Props = {
+  data: LessonTableDataType[];
+  userRole: UserRole | null;
+  relativeData: LessonTableRelativeData;
+};
 
-function LessonsTableWrapper({ data, userRole }: Props) {
+function LessonsTableWrapper({ data, userRole, relativeData}: Props) {
   const lessonsActions: ColumnDef<LessonTableDataType>[] = [
     "teacher",
     "admin",
@@ -26,6 +30,7 @@ function LessonsTableWrapper({ data, userRole }: Props) {
                   type="update"
                   data={row.original}
                   id={row.original.id}
+                  relativeData={relativeData}
                 />{" "}
                 <FormDialog
                   table="lesson"

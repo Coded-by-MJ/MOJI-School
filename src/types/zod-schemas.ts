@@ -54,6 +54,7 @@ export const teacherFormSchema = z.object({
   birthday: z.date({ message: "Birthday is required!" }),
   sex: z.enum(["MALE", "FEMALE"], { message: "Sex is required!" }),
   img: validateImageFile().optional(),
+  subjects: z.array(z.string()),
 });
 export const parentFormSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required!" }),
@@ -91,13 +92,14 @@ export const gradeFormSchema = z.object({
 });
 export const subjectFormSchema = z.object({
   name: z.string().min(1, { message: "name is required!" }),
+  teachers: z.array(z.string()),
 });
 
 export const lessonFormSchema = z
   .object({
     name: z.string().min(1, { message: "name is required!" }),
-    startTime: z.date({ message: "Start Time is required!" }),
-    endTime: z.date({ message: "End Time is required!" }),
+    startTime: z.coerce.date({ message: "Start Time is required!" }),
+    endTime: z.coerce.date({ message: "End Time is required!" }),
     day: z.enum(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"], {
       message: "Day is required!",
     }),

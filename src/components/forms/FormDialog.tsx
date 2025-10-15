@@ -16,11 +16,14 @@ import {
   ClassTableDataType,
   ClassTableRelativeData,
   LessonTableDataType,
+  LessonTableRelativeData,
   ParentTableDataType,
   StudentTableDataType,
   StudentTableRelativeData,
   SubjectTableDataType,
+  SubjectTableRelativeData,
   TeacherTableDataType,
+  TeacherTableRelativeData,
 } from "@/types";
 import { useState } from "react";
 
@@ -102,12 +105,12 @@ type FormDataMap = {
 };
 
 type RelativeDataMap = {
-  teacher: {};
+  teacher: TeacherTableRelativeData;
   student: StudentTableRelativeData;
   parent: {};
-  subject: {};
+  subject: SubjectTableRelativeData;
   class: ClassTableRelativeData;
-  lesson: {};
+  lesson: LessonTableRelativeData;
   exam: {};
   assignment: {};
   result: {};
@@ -135,8 +138,13 @@ const forms: {
     onClose: () => void;
   }) => JSX.Element;
 } = {
-  teacher: ({ type, data, onClose }) => (
-    <TeacherForm type={type} data={data} onClose={onClose} />
+  teacher: ({ type, data, onClose, relativeData }) => (
+    <TeacherForm
+      type={type}
+      data={data}
+      onClose={onClose}
+      relativeData={relativeData}
+    />
   ),
   student: ({ type, data, onClose, relativeData }) => (
     <StudentForm
@@ -149,8 +157,13 @@ const forms: {
   parent: ({ type, data, onClose }) => (
     <ParentForm type={type} data={data} onClose={onClose} />
   ),
-  subject: ({ type, data, onClose }) => (
-    <SubjectForm type={type} data={data} onClose={onClose} />
+  subject: ({ type, data, onClose, relativeData }) => (
+    <SubjectForm
+      type={type}
+      data={data}
+      onClose={onClose}
+      relativeData={relativeData}
+    />
   ),
   class: ({ type, data, relativeData, onClose }) => (
     <ClassForm
@@ -160,8 +173,8 @@ const forms: {
       onClose={onClose}
     />
   ),
-  lesson: ({ type, data, onClose }) => (
-    <LessonForm type={type} data={data} onClose={onClose} />
+  lesson: ({ type, data, onClose, relativeData }) => (
+    <LessonForm type={type} data={data} onClose={onClose} relativeData={relativeData} />
   ),
   exam: ({ type, data }) => <ExamForm type={type} data={data} />,
   assignment: ({ type, data }) => <AssignmentForm type={type} data={data} />,

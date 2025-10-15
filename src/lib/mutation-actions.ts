@@ -3,8 +3,10 @@
 import { ActionState } from "@/types";
 import {
   ClassFormSchemaType,
+  LessonFormSchemaType,
   ParentFormSchemaType,
   StudentFormSchemaType,
+  SubjectFormSchemaType,
   TeacherFormSchemaType,
 } from "@/types/zod-schemas";
 import prisma from "./prisma";
@@ -16,6 +18,7 @@ import {
 } from "@/utils/funcs";
 import { auth } from "./auth";
 import { headers } from "next/headers";
+import { teacher } from "./permissions";
 
 const renderError = (error: unknown): ActionState => {
   console.log(error);
@@ -66,6 +69,9 @@ export const createTeacher = async (
         phone: data.phone,
         birthday: data.birthday,
         sex: data.sex,
+        subjects: {
+          connect: data.subjects.map((subjectId) => ({ id: subjectId })),
+        },
       },
     });
 
@@ -126,6 +132,11 @@ export const updateTeacher = async (
       phone: data.phone,
       birthday: data.birthday,
       sex: data.sex,
+      subjects: {
+        set: data.subjects?.map((subjectId: string) => ({
+          id: subjectId,
+        })),
+      },
     },
   });
 
@@ -361,6 +372,50 @@ export const updateStudent = async (
   };
 };
 
+export const createSubject = async (
+  data: SubjectFormSchemaType
+): Promise<ActionState> => {
+  await prisma.subject.create({
+    data: {
+      name: data.name,
+      teachers: {
+        connect: data.teachers.map((teacherId) => ({ id: teacherId })),
+      },
+    },
+  });
+
+  revalidatePath("/list/subjects");
+
+  return {
+    message: "Subject created successfully",
+    type: "success",
+  };
+};
+
+export const updateSubject = async (
+  subjectId: string,
+  data: SubjectFormSchemaType
+): Promise<ActionState> => {
+  await prisma.subject.update({
+    where: {
+      id: subjectId,
+    },
+    data: {
+      name: data.name,
+      teachers: {
+        set: data.teachers.map((teacherId) => ({ id: teacherId })),
+      },
+    },
+  });
+
+  revalidatePath("/list/subjects");
+
+  return {
+    message: "Subject updated successfully",
+    type: "success",
+  };
+};
+
 export const createClass = async (
   data: ClassFormSchemaType
 ): Promise<ActionState> => {
@@ -394,6 +449,45 @@ export const updateClass = async (
   revalidatePath("/list/classes");
   return {
     message: "Class updated successfully",
+    type: "success",
+  };
+};
+
+
+
+export const createLesson = async (
+  data: LessonFormSchemaType
+): Promise<ActionState> => {
+   await prisma.lesson.create({
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/lessons");
+
+  return {
+    message: "Lesson created successfully",
+    type: "success",
+  };
+};
+
+export const updateLesson = async (
+  lessonId: string,
+  data: LessonFormSchemaType
+): Promise<ActionState> => {
+  await prisma.lesson.update({
+    where: {
+      id: lessonId,
+    },
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/lessons");
+  return {
+    message: "Lesson updated successfully",
     type: "success",
   };
 };

@@ -5,15 +5,16 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/global/DataTable";
 
 import FormDialog from "../forms/FormDialog";
-import { SubjectTableDataType } from "@/types";
+import { SubjectTableDataType, SubjectTableRelativeData } from "@/types";
 import { UserRole } from "@prisma/client";
 
 type Props = {
   data: SubjectTableDataType[];
   userRole: UserRole | null;
+  relativeData: SubjectTableRelativeData;
 };
 
-function SubjectsTableWrapper({ data, userRole }: Props) {
+function SubjectsTableWrapper({ data, userRole, relativeData }: Props) {
   const subjectsActions: ColumnDef<SubjectTableDataType>[] =
     userRole === "admin"
       ? [
@@ -28,6 +29,7 @@ function SubjectsTableWrapper({ data, userRole }: Props) {
                     type="update"
                     data={row.original}
                     id={row.original.id}
+                    relativeData={relativeData}
                   />{" "}
                   <FormDialog
                     table="subject"

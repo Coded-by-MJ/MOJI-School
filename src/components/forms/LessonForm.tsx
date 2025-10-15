@@ -23,28 +23,41 @@ import { lessonFormSchema, LessonFormSchemaType } from "@/types/zod-schemas";
 import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
 import { useState } from "react";
-import { LessonTableDataType } from "@/types";
+import { format, parse } from "date-fns";
+
+import { LessonTableDataType, LessonTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
+import { createLesson, updateLesson } from "@/lib/mutation-actions";
 
 const LessonForm = ({
   type,
   data,
   onClose,
+  relativeData,
 }: {
   type: "create" | "update";
   data?: Partial<LessonTableDataType>;
+  relativeData?: LessonTableRelativeData;
   onClose: () => void;
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<LessonFormSchemaType>({
+  const teachers = relativeData?.teachers || [];
+  const classes = relativeData?.classes || [];
+  const subjects = relativeData?.subjects || [];
+
+  const form = useForm({
     resolver: zodResolver(lessonFormSchema),
     mode: "onChange",
     defaultValues: {
       name: data?.name,
       day: data?.day,
-      startTime: data?.startTime,
-      endTime: data?.endTime,
+      startTime:
+        data && data.startTime
+          ? new Date(data.startTime).toISOString()
+          : undefined,
+      endTime:
+        data && data.endTime ? new Date(data.endTime).toISOString() : undefined,
       teacherId: data?.teacherId,
       classId: data?.classId,
       subjectId: data?.subjectId,
@@ -55,6 +68,9 @@ const LessonForm = ({
     setIsLoading(true);
 
     try {
+      const msg = await createLesson(values);
+      toast[msg.type](msg.message);
+      onClose();
     } catch (error) {
       renderClientError(error);
     } finally {
@@ -66,6 +82,9 @@ const LessonForm = ({
     setIsLoading(true);
 
     try {
+      const msg = await updateLesson(data?.id!, values);
+      toast[msg.type](msg.message);
+      onClose();
     } catch (error) {
       renderClientError(error);
     } finally {
@@ -117,16 +136,19 @@ const LessonForm = ({
                     type="time"
                     value={
                       field.value
-                        ? field.value.toISOString().split("T")[1].slice(0, 5)
+                        ? format(new Date(field.value as string), "HH:mm") // show local time correctly
                         : ""
                     }
                     onChange={(e) => {
-                      const [hours, minutes] = e.target.value
-                        .split(":")
-                        .map(Number);
-                      const newDate = new Date();
-                      newDate.setHours(hours, minutes, 0, 0);
-                      field.onChange(newDate);
+                      const timeValue = e.target.value; // e.g. "07:30"
+                      if (!timeValue) {
+                        field.onChange(undefined);
+                        return;
+                      }
+
+                      const parsedDate = parse(timeValue, "HH:mm", new Date());
+
+                      field.onChange(parsedDate.toISOString());
                     }}
                   />
                 </FormControl>
@@ -146,16 +168,19 @@ const LessonForm = ({
                     type="time"
                     value={
                       field.value
-                        ? field.value.toISOString().split("T")[1].slice(0, 5)
+                        ? format(new Date(field.value as string), "HH:mm") // show local time correctly
                         : ""
                     }
                     onChange={(e) => {
-                      const [hours, minutes] = e.target.value
-                        .split(":")
-                        .map(Number);
-                      const newDate = new Date();
-                      newDate.setHours(hours, minutes, 0, 0);
-                      field.onChange(newDate);
+                      const timeValue = e.target.value; // e.g. "07:30"
+                      if (!timeValue) {
+                        field.onChange(undefined);
+                        return;
+                      }
+
+                      const parsedDate = parse(timeValue, "HH:mm", new Date());
+
+                      field.onChange(parsedDate.toISOString());
                     }}
                   />
                 </FormControl>
@@ -185,6 +210,87 @@ const LessonForm = ({
                     <SelectItem value="WEDNESDAY">Wednesday</SelectItem>
                     <SelectItem value="THURSDAY">Thursday</SelectItem>
                     <SelectItem value="FRIDAY">Friday</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="subjectId"
+            render={({ field }) => (
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Subject</FormLabel>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="classId"
+            render={({ field }) => (
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Class</FormLabel>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {classes.map((classItem) => (
+                      <SelectItem key={classItem.id} value={classItem.id}>
+                        {classItem.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="teacherId"
+            render={({ field }) => (
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Teacher</FormLabel>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {teachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.user.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

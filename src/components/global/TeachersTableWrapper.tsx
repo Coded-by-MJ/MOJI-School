@@ -8,7 +8,7 @@ import { DataTable } from "@/components/global/DataTable";
 import { Button } from "../ui/button";
 import { Eye } from "lucide-react";
 import FormDialog from "../forms/FormDialog";
-import { TeacherTableDataType } from "@/types";
+import { TeacherTableDataType, TeacherTableRelativeData } from "@/types";
 import { extractId, getDefaultImage } from "@/utils/funcs";
 import AllowedUserCompClient from "../auth/AllowedUserCompClient";
 
@@ -54,7 +54,7 @@ function TeachersTableWrapper({ data }: Props) {
       accessorKey: "subjects",
 
       cell: ({ row }) => {
-        const allSubjects = row.original.classes.map((c) => c.name);
+        const allSubjects = row.original.subjects.map((c) => c.name);
         return <span>{allSubjects.join(", ") || "N/A"}</span>;
       },
     },

@@ -33,7 +33,7 @@ const EventCalendar = () => {
   const [value, onChange] = useState<Date | undefined>(new Date());
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 bg-muted">
       <Calendar
         mode="single"
         selected={value}
