@@ -13,11 +13,23 @@ import { Button } from "../ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import FormSkeleton from "./FormSkeleton";
 import {
+  AnnouncementTableDataType,
+  AnnouncementTableRelativeData,
+  AssignmentTableDataType,
+  AssignmentTableRelativeData,
+  AttendanceTableDataType,
+  AttendanceTableRelativeData,
   ClassTableDataType,
   ClassTableRelativeData,
+  EventTableDataType,
+  EventTableRelativeData,
+  ExamTableDataType,
+  ExamTableRelativeData,
   LessonTableDataType,
   LessonTableRelativeData,
   ParentTableDataType,
+  ResultTableDataType,
+  ResultTableRelativeData,
   StudentTableDataType,
   StudentTableRelativeData,
   SubjectTableDataType,
@@ -26,6 +38,9 @@ import {
   TeacherTableRelativeData,
 } from "@/types";
 import { useState } from "react";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import { usePathname, useRouter } from "next/navigation";
 
 const TeacherForm = dynamic(() => import("./TeacherForm"), {
   loading: () => <FormSkeleton />,
@@ -96,12 +111,12 @@ type FormDataMap = {
   subject: Partial<SubjectTableDataType>;
   class: Partial<ClassTableDataType>;
   lesson: Partial<LessonTableDataType>;
-  exam: {};
-  assignment: {};
-  result: {};
-  attendance: {};
-  event: {};
-  announcement: {};
+  exam: Partial<ExamTableDataType>;
+  assignment: Partial<AssignmentTableDataType>;
+  result: Partial<ResultTableDataType>;
+  attendance: Partial<AttendanceTableDataType>;
+  event: Partial<EventTableDataType>;
+  announcement: Partial<AnnouncementTableDataType>;
 };
 
 type RelativeDataMap = {
@@ -111,12 +126,42 @@ type RelativeDataMap = {
   subject: SubjectTableRelativeData;
   class: ClassTableRelativeData;
   lesson: LessonTableRelativeData;
-  exam: {};
-  assignment: {};
-  result: {};
-  attendance: {};
-  event: {};
-  announcement: {};
+  exam: ExamTableRelativeData;
+  assignment: AssignmentTableRelativeData;
+  result: ResultTableRelativeData;
+  attendance: AttendanceTableRelativeData;
+  event: EventTableRelativeData;
+  announcement: AnnouncementTableRelativeData;
+};
+
+// const deleteActionMap = {
+//   subject: deleteSubject,
+//   class: deleteClass,
+//   teacher: deleteTeacher,
+//   student: deleteStudent,
+//   exam: deleteExam,
+//   parent: deleteSubject,
+//   lesson: deleteSubject,
+//   assignment: deleteSubject,
+//   result: deleteSubject,
+//   attendance: deleteSubject,
+//   event: deleteSubject,
+//   announcement: deleteSubject,
+// };
+
+const deleteActionMap = {
+  subject: "subject",
+  class: "class",
+  teacher: "teacher",
+  student: "student",
+  exam: "exam",
+  parent: "parent",
+  lesson: "lesson",
+  assignment: "assignment",
+  result: "result",
+  attendance: "attendance",
+  event: "event",
+  announcement: "announcement",
 };
 
 type FormDialogProps<T extends keyof FormDataMap> = {
@@ -174,15 +219,45 @@ const forms: {
     />
   ),
   lesson: ({ type, data, onClose, relativeData }) => (
-    <LessonForm type={type} data={data} onClose={onClose} relativeData={relativeData} />
+    <LessonForm
+      type={type}
+      data={data}
+      onClose={onClose}
+      relativeData={relativeData}
+    />
   ),
-  exam: ({ type, data }) => <ExamForm type={type} data={data} />,
-  assignment: ({ type, data }) => <AssignmentForm type={type} data={data} />,
-  result: ({ type, data }) => <ResultForm type={type} data={data} />,
-  attendance: ({ type, data }) => <AttendanceForm type={type} data={data} />,
-  event: ({ type, data }) => <EventForm type={type} data={data} />,
-  announcement: ({ type, data }) => (
-    <AnnouncementForm type={type} data={data} />
+  exam: ({ type, data, onClose, relativeData }) => (
+    <ExamForm
+      type={type}
+      data={data}
+      onClose={onClose}
+      relativeData={relativeData}
+    />
+  ),
+  assignment: ({ type, data, onClose, relativeData }) => (
+    <AssignmentForm
+      type={type}
+      data={data}
+      onClose={onClose}
+      relativeData={relativeData}
+    />
+  ),
+  result: ({ type, data, onClose, relativeData }) => (
+    <ResultForm
+      type={type}
+      data={data}
+      relativeData={relativeData}
+      onClose={onClose}
+    />
+  ),
+  attendance: ({ type, data, onClose, relativeData }) => (
+    <AttendanceForm type={type} data={data} relativeData={relativeData} onClose={onClose} />
+  ),
+  event: ({ type, data, onClose, relativeData }) => (
+    <EventForm type={type} data={data} relativeData={relativeData} onClose={onClose} />
+  ),
+  announcement: ({ type, data, onClose, relativeData }) => (
+    <AnnouncementForm type={type} data={data} relativeData={relativeData} onClose={onClose} />
   ),
 };
 
@@ -206,11 +281,57 @@ function FormDialog<T extends keyof FormDataMap>({
   userId,
 }: FormDialogProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const router = useRouter();
 
   const onClose = () => {
     setIsOpen(false);
   };
+
+  const handleUserDelete = async (userIdInput: string) => {
+    await authClient.admin.removeUser(
+      {
+        userId: userIdInput, // required
+      },
+      {
+        onRequest: () => {
+          setIsDeleteLoading(true);
+        },
+        onSuccess: async () => {
+          setIsDeleteLoading(false);
+          onClose();
+
+          toast.success("User deleted successfully.");
+          router.refresh();
+        },
+        onError: (ctx) => {
+          setIsDeleteLoading(false);
+          console.log(ctx);
+          toast.error(
+            ctx.error.message ?? "Something went wrong, try again later."
+          );
+        },
+      }
+    );
+  };
+
   const Form = () => {
+    if (type === "delete" && userId && id)
+      return (
+        <div className="p-4 flex flex-col gap-4">
+          <span className="text-center font-medium">
+            All associated data may be lost. Are you sure you want to delete
+            this {table}?
+          </span>
+          <Button
+            disabled={isDeleteLoading}
+            onClick={() => handleUserDelete(userId)}
+            className="bg-red-700 text-white py-2 px-4 rounded-md w-max self-center"
+          >
+            {isDeleteLoading ? "Deleting..." : "Delete"}
+          </Button>
+        </div>
+      );
     if (type === "delete" && id) {
       return (
         <form action="" className="p-4 flex flex-col gap-4">

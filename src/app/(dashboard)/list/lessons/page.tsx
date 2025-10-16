@@ -11,6 +11,7 @@ import { SlidersHorizontal, ListFilter } from "lucide-react";
 async function LessonsListPage({ searchParams }: PageProps<"/list/lessons">) {
   const queryParams = await searchParams;
   const filterParams: TableSearchParams = {
+    classId: queryParams.classId?.toString(),
     teacherId: queryParams.teacherId?.toString(),
     page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
     search: queryParams.search?.toString(),

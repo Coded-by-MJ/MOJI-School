@@ -107,10 +107,140 @@ export const lessonFormSchema = z
     classId: z.string().min(1, { message: "Class ID is required!" }),
     subjectId: z.string().min(1, { message: "Subject ID is required!" }),
   })
-  .refine((data) => data.startTime < data.endTime, {
-    message: "Start time must be earlier than end time",
-    path: ["endTime"], // error shows under endTime field
+  .refine((data) => data.endTime > data.startTime, {
+    message: "End time must be later than start time",
+    path: ["endTime"], // attach error to endTime field
   });
+export const examFormSchema = z
+  .object({
+    title: z.string().min(1, { message: "title is required!" }),
+    startTime: z.coerce.date({ message: "Start Time is required!" }),
+    endTime: z.coerce.date({ message: "End Time is required!" }),
+    lessonId: z.string().min(1, { message: "Lesson ID is required!" }),
+  })
+  .refine((data) => data.endTime > data.startTime, {
+    message: "End time must be later than start time",
+    path: ["endTime"], // attach error to endTime field
+  });
+export const assignmentFormSchema = z
+  .object({
+    title: z.string().min(1, { message: "title is required!" }),
+    startDate: z.coerce.date({ message: "Start Date is required!" }),
+    dueDate: z.coerce.date({ message: "Due Date is required!" }),
+    lessonId: z.string().min(1, { message: "Lesson ID is required!" }),
+  })
+  .refine((data) => data.dueDate > data.startDate, {
+    message: "Due Date must be later than start date",
+    path: ["dueDate"], // attach error to endTime field
+  });
+
+export const resultFormSchema = z
+  .object({
+    score: z.coerce
+      .number({ message: "Score must be a number" })
+      .int({ message: "Score must be an integer" })
+      .min(0, { message: "Score cannot be negative" }),
+    type: z.enum(["EXAM", "ASSIGNMENT"], {
+      message: "type is required!",
+    }),
+
+    examId: z
+      .string({ message: "Exam ID must be a string" })
+      .optional()
+      .nullable(),
+
+    assignmentId: z
+      .string({ message: "Assignment ID must be a string" })
+      .optional()
+      .nullable(),
+
+    studentId: z.string({ message: "Student ID is required" }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === "EXAM" && !data.examId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Exam ID is required when type is EXAM",
+        path: ["examId"],
+      });
+    }
+
+    if (data.type === "ASSIGNMENT" && !data.assignmentId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Assignment ID is required when type is ASSIGNMENT",
+        path: ["assignmentId"],
+      });
+    }
+  });
+
+export const announcementFormSchema = z.object({
+  title: z
+    .string({
+      message: "Announcement title is required",
+    })
+    .min(2, "Title must be at least 2 characters long"),
+
+  description: z
+    .string({
+      message: "Announcement description is required",
+    })
+    .min(5, "Description must be at least 5 characters long"),
+
+  date: z.coerce.date({
+    message: "Date is required",
+  }),
+
+  classId: z.string().optional(),
+});
+
+export const attendanceFormSchema = z.object({
+  date: z.coerce.date({
+    message: "Date is required",
+  }),
+
+  present: z.boolean({
+    message: "Present status is required",
+  }),
+
+  studentId: z.string({
+    message: "Student ID is required",
+  }),
+
+  lessonId: z.string({
+    message: "Lesson ID is required",
+  }),
+});
+
+export const eventFormSchema = z
+  .object({
+    title: z
+      .string({
+        message: "Event title is required",
+      })
+      .min(2, "Title must be at least 2 characters long"),
+
+    description: z
+      .string({
+        message: "Event description is required",
+      })
+      .min(5, "Description must be at least 5 characters long"),
+
+    startTime: z.coerce.date({
+      message: "Start time is required",
+    }),
+
+    endTime: z.coerce.date({
+      message: "End time is required",
+    }),
+
+    classId: z.string().optional(),
+  })
+  .refine((data) => data.endTime > data.startTime, {
+    message: "End time must be later than start time",
+    path: ["endTime"],
+  });
+
 export function validateImageFiles() {
   const maxUploadSize = 2 * 1024 * 1024; // 2MB
   const acceptedFileTypes = [
@@ -181,3 +311,9 @@ export type LessonFormSchemaType = z.infer<typeof lessonFormSchema>;
 export type GradeFormSchemaType = z.infer<typeof gradeFormSchema>;
 export type ClassFormSchemaType = z.infer<typeof classFormSchema>;
 export type SubjectFormSchemaType = z.infer<typeof subjectFormSchema>;
+export type ExamFormSchemaType = z.infer<typeof examFormSchema>;
+export type AssignmentFormSchemaType = z.infer<typeof assignmentFormSchema>;
+export type ResultFormSchemaType = z.infer<typeof resultFormSchema>;
+export type AttendanceFormSchemaType = z.infer<typeof attendanceFormSchema>;
+export type EventFormSchemaType = z.infer<typeof eventFormSchema>;
+export type AnnouncementFormSchemaType = z.infer<typeof announcementFormSchema>;

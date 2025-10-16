@@ -2,9 +2,15 @@
 
 import { ActionState } from "@/types";
 import {
+  AnnouncementFormSchemaType,
+  AssignmentFormSchemaType,
+  AttendanceFormSchemaType,
   ClassFormSchemaType,
+  EventFormSchemaType,
+  ExamFormSchemaType,
   LessonFormSchemaType,
   ParentFormSchemaType,
+  ResultFormSchemaType,
   StudentFormSchemaType,
   SubjectFormSchemaType,
   TeacherFormSchemaType,
@@ -18,7 +24,6 @@ import {
 } from "@/utils/funcs";
 import { auth } from "./auth";
 import { headers } from "next/headers";
-import { teacher } from "./permissions";
 
 const renderError = (error: unknown): ActionState => {
   console.log(error);
@@ -416,6 +421,28 @@ export const updateSubject = async (
   };
 };
 
+export const deleteSubject = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.subject.delete({
+      where: {
+        id,
+      },
+    });
+    revalidatePath("/list/subjects");
+    return {
+      message: "Subject deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
 export const createClass = async (
   data: ClassFormSchemaType
 ): Promise<ActionState> => {
@@ -453,12 +480,32 @@ export const updateClass = async (
   };
 };
 
+export const deleteClass = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const id = data.get("id") as string;
 
+  try {
+    await prisma.class.delete({
+      where: {
+        id,
+      },
+    });
+    revalidatePath("/list/classes");
+    return {
+      message: "Class deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
+};
 
 export const createLesson = async (
   data: LessonFormSchemaType
 ): Promise<ActionState> => {
-   await prisma.lesson.create({
+  await prisma.lesson.create({
     data: {
       ...data,
     },
@@ -490,4 +537,396 @@ export const updateLesson = async (
     message: "Lesson updated successfully",
     type: "success",
   };
+};
+
+export const deleteLesson = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.lesson.delete({
+      where: {
+        id,
+      },
+    });
+    revalidatePath("/list/lessons");
+    return {
+      message: "Lesson deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+export const createExam = async (
+  data: ExamFormSchemaType
+): Promise<ActionState> => {
+  await prisma.exam.create({
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/exams");
+
+  return {
+    message: "Exam created successfully",
+    type: "success",
+  };
+};
+
+export const updateExam = async (
+  id: string,
+  data: ExamFormSchemaType
+): Promise<ActionState> => {
+  await prisma.exam.update({
+    where: {
+      id,
+    },
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/exams");
+  return {
+    message: "Exam updated successfully",
+    type: "success",
+  };
+};
+
+export const deleteExam = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.exam.delete({
+      where: {
+        id,
+      },
+    });
+    revalidatePath("/list/exams");
+    return {
+      message: "Exam deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+export const createAssignment = async (
+  data: AssignmentFormSchemaType
+): Promise<ActionState> => {
+  await prisma.assignment.create({
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/assignments");
+
+  return {
+    message: "Assignment created successfully",
+    type: "success",
+  };
+};
+
+export const updateAssignment = async (
+  id: string,
+  data: AssignmentFormSchemaType
+): Promise<ActionState> => {
+  await prisma.assignment.update({
+    where: {
+      id,
+    },
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/assignments");
+  return {
+    message: "Assignment updated successfully",
+    type: "success",
+  };
+};
+
+export const deleteAssignment = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.assignment.delete({
+      where: {
+        id,
+      },
+    });
+    revalidatePath("/list/assignments");
+    return {
+      message: "Assignment deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+export const createResult = async (
+  data: ResultFormSchemaType
+): Promise<ActionState> => {
+  await prisma.result.create({
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/results");
+
+  return {
+    message: "Result created successfully",
+    type: "success",
+  };
+};
+
+export const updateResult = async (
+  id: string,
+  data: ResultFormSchemaType
+): Promise<ActionState> => {
+  await prisma.result.update({
+    where: {
+      id,
+    },
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/results");
+  return {
+    message: "Result updated successfully",
+    type: "success",
+  };
+};
+
+export const deleteResult = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.result.delete({
+      where: {
+        id,
+      },
+    });
+    revalidatePath("/list/results");
+    return {
+      message: "Result deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+
+
+export const createAttendance = async (
+  data: AttendanceFormSchemaType
+): Promise<ActionState> => {
+  await prisma.attendance.create({
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/attendances");
+
+  return {
+    message: "Attendance created successfully",
+    type: "success",
+  };
+};
+
+export const updateAttendance = async (
+  id: string,
+  data: AttendanceFormSchemaType
+): Promise<ActionState> => {
+  await prisma.attendance.update({
+    where: {
+      id,
+    },
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/attendances");
+  return {
+    message: "Attendance updated successfully",
+    type: "success",
+  };
+};
+
+export const deleteAttendance = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.attendance.delete({
+      where: {
+        id,
+      },
+    });
+    revalidatePath("/list/attendances");
+    return {
+      message: "Attendance deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+
+
+export const createAnnouncement = async (
+  data: AnnouncementFormSchemaType
+): Promise<ActionState> => {
+  await prisma.announcement.create({
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/announcements");
+
+  return {
+    message: "Announcement created successfully",
+    type: "success",
+  };
+};
+
+export const updateAnnouncement = async (
+  id: string,
+  data: AnnouncementFormSchemaType
+): Promise<ActionState> => {
+  await prisma.announcement.update({
+    where: {
+      id,
+    },
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/announcements");
+  return {
+    message: "Announcement updated successfully",
+    type: "success",
+  };
+};
+
+export const deleteAnnouncement = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.announcement.delete({
+      where: {
+        id,
+      },
+    });
+    revalidatePath("/list/announcements");
+    return {
+      message: "Announcement deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+
+export const createEvent = async (
+  data: EventFormSchemaType
+): Promise<ActionState> => {
+  await prisma.event.create({
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/events");
+
+  return {
+    message: "Event created successfully",
+    type: "success",
+  };
+};
+
+export const updateEvent = async (
+  id: string,
+  data: EventFormSchemaType
+): Promise<ActionState> => {
+  await prisma.event.update({
+    where: {
+      id,
+    },
+    data: {
+      ...data,
+    },
+  });
+
+  revalidatePath("/list/events");
+  return {
+    message: "Event updated successfully",
+    type: "success",
+  };
+};
+
+export const deleteEvent = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.event.delete({
+      where: {
+        id,
+      },
+    });
+    revalidatePath("/list/events");
+    return {
+      message: "Event deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
 };

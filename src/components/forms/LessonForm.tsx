@@ -23,7 +23,7 @@ import { lessonFormSchema, LessonFormSchemaType } from "@/types/zod-schemas";
 import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
 import { useState } from "react";
-import { format, parse } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 import { LessonTableDataType, LessonTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
@@ -133,21 +133,25 @@ const LessonForm = ({
                 <FormLabel>Start Time</FormLabel>
                 <FormControl>
                   <Input
-                    type="time"
+                    type="datetime-local"
+                    min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
                     value={
                       field.value
-                        ? format(new Date(field.value as string), "HH:mm") // show local time correctly
+                        ? format(
+                            parseISO(field.value as string),
+                            "yyyy-MM-dd'T'HH:mm"
+                          )
                         : ""
                     }
                     onChange={(e) => {
-                      const timeValue = e.target.value; // e.g. "07:30"
+                      const timeValue = e.target.value;
                       if (!timeValue) {
                         field.onChange(undefined);
                         return;
                       }
 
-                      const parsedDate = parse(timeValue, "HH:mm", new Date());
-
+                      // convert back to UTC ISO string for storage
+                      const parsedDate = new Date(timeValue);
                       field.onChange(parsedDate.toISOString());
                     }}
                   />
@@ -165,21 +169,25 @@ const LessonForm = ({
                 <FormLabel>End Time</FormLabel>
                 <FormControl>
                   <Input
-                    type="time"
+                    type="datetime-local"
+                    min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
                     value={
                       field.value
-                        ? format(new Date(field.value as string), "HH:mm") // show local time correctly
+                        ? format(
+                            parseISO(field.value as string),
+                            "yyyy-MM-dd'T'HH:mm"
+                          )
                         : ""
                     }
                     onChange={(e) => {
-                      const timeValue = e.target.value; // e.g. "07:30"
+                      const timeValue = e.target.value;
                       if (!timeValue) {
                         field.onChange(undefined);
                         return;
                       }
 
-                      const parsedDate = parse(timeValue, "HH:mm", new Date());
-
+                      // convert back to UTC ISO string for storage
+                      const parsedDate = new Date(timeValue);
                       field.onChange(parsedDate.toISOString());
                     }}
                   />

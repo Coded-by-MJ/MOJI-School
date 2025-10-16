@@ -20,34 +20,82 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  TeacherFormSchemaType,
-  teacherFormSchema
+  assignmentFormSchema,
+  AssignmentFormSchemaType,
 } from "@/types/zod-schemas";
-import { UploadCloud } from "lucide-react";
+import { renderClientError } from "@/utils/funcs";
+import { toast } from "sonner";
+import { useState } from "react";
+import { format, parseISO } from "date-fns";
+
+import { AssignmentTableDataType, AssignmentTableRelativeData } from "@/types";
+import { Loader2 } from "lucide-react";
+import { createAssignment, updateAssignment } from "@/lib/mutation-actions";
 
 const AssignmentForm = ({
   type,
   data,
+  onClose,
+  relativeData,
 }: {
   type: "create" | "update";
-  data?: Partial<TeacherFormSchemaType>;
+  data?: Partial<AssignmentTableDataType>;
+  relativeData?: AssignmentTableRelativeData;
+  onClose: () => void;
 }) => {
-  const form = useForm<TeacherFormSchemaType>({
-    resolver: zodResolver(teacherFormSchemas),
+  const [isLoading, setIsLoading] = useState(false);
+
+  const lessons = relativeData?.lessons || [];
+
+  const form = useForm({
+    resolver: zodResolver(assignmentFormSchema),
+    mode: "onChange",
     defaultValues: {
-      firstName: data?.firstName || "",
-      lastName: data?.lastName || "",
-      email: data?.email || "",
-      phone: data?.phone || "",
-      address: data?.address || "",
-      bloodType: data?.bloodType || "",
-      birthday: data?.birthday || "",
-      sex: data?.sex || "male",
+      title: data?.title,
+      startDate:
+        data && data.startDate
+          ? new Date(data.startDate).toISOString()
+          : undefined,
+      dueDate:
+        data && data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+      lessonId: data?.lessonId,
     },
   });
 
-  const onSubmit = (values: TeacherFormSchemaType) => {
-    console.log(values);
+  const handleCreate = async (values: AssignmentFormSchemaType) => {
+    setIsLoading(true);
+
+    try {
+      const msg = await createAssignment(values);
+      toast[msg.type](msg.message);
+      onClose();
+    } catch (error) {
+      renderClientError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdate = async (values: AssignmentFormSchemaType) => {
+    setIsLoading(true);
+
+    try {
+      const msg = await updateAssignment(data?.id!, values);
+      toast[msg.type](msg.message);
+      onClose();
+    } catch (error) {
+      renderClientError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSubmit = (values: AssignmentFormSchemaType) => {
+    if (type === "create") {
+      handleCreate(values);
+    } else {
+      handleUpdate(values);
+    }
   };
 
   return (
@@ -56,19 +104,19 @@ const AssignmentForm = ({
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col gap-8"
       >
-        {/* Personal Section */}
-        <span className="text-xs text-gray-400 font-medium">
-          Student Information
+        {/* Personal */}
+        <span className="text-xs text-secondary/80 font-medium">
+          Assignment Information
         </span>
-        <div className="flex justify-between flex-wrap gap-4">
+        <div className="flex justify-between w-full flex-wrap gap-4">
           <FormField
             control={form.control}
-            name="firstName"
+            name="title"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>First Name</FormLabel>
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <Input placeholder="First name" {...field} />
+                  <Input placeholder="Assignment Title" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -77,30 +125,33 @@ const AssignmentForm = ({
 
           <FormField
             control={form.control}
-            name="lastName"
+            name="startDate"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Last name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Email</FormLabel>
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Start Date</FormLabel>
                 <FormControl>
                   <Input
-                    readOnly={type === "update"}
-                    className="read-only:cursor-not-allowed read-only:opacity-50"
-                    placeholder="Email"
-                    {...field}
+                    type="datetime-local"
+                    min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                    value={
+                      field.value
+                        ? format(
+                            parseISO(field.value as string),
+                            "yyyy-MM-dd'T'HH:mm"
+                          )
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const timeValue = e.target.value;
+                      if (!timeValue) {
+                        field.onChange(undefined);
+                        return;
+                      }
+
+                      // convert back to UTC ISO string for storage
+                      const parsedDate = new Date(timeValue);
+                      field.onChange(parsedDate.toISOString());
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -110,12 +161,34 @@ const AssignmentForm = ({
 
           <FormField
             control={form.control}
-            name="phone"
+            name="dueDate"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Phone</FormLabel>
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Due Date</FormLabel>
                 <FormControl>
-                  <Input placeholder="Phone number" {...field} />
+                  <Input
+                    type="datetime-local"
+                    min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                    value={
+                      field.value
+                        ? format(
+                            parseISO(field.value as string),
+                            "yyyy-MM-dd'T'HH:mm"
+                          )
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const timeValue = e.target.value;
+                      if (!timeValue) {
+                        field.onChange(undefined);
+                        return;
+                      }
+
+                      // convert back to UTC ISO string for storage
+                      const parsedDate = new Date(timeValue);
+                      field.onChange(parsedDate.toISOString());
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -124,107 +197,43 @@ const AssignmentForm = ({
 
           <FormField
             control={form.control}
-            name="address"
+            name="lessonId"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="Address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="birthday"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Birthday</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="bloodType"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Blood Type</FormLabel>
-                <FormControl>
-                  <Input placeholder="Blood type" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="sex"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Sex</FormLabel>
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Lesson</FormLabel>
                 <Select
                   defaultValue={field.value}
                   onValueChange={field.onChange}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select sex" />
+                      <SelectValue placeholder="Select" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
+                    {lessons.map((lesson) => (
+                      <SelectItem key={lesson.id} value={lesson.id}>
+                        {lesson.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          {/* File Upload */}
-          <FormField
-            control={form.control}
-            name="img"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Upload Photo</FormLabel>
-                <FormControl>
-                  <div className="flex items-center gap-2">
-                    <label
-                      htmlFor="img"
-                      className="flex items-center gap-2 cursor-pointer text-sm text-primary"
-                    >
-                      <UploadCloud size={24} />
-                      <span>{field.value ? field.value.name : "Upload"}</span>
-                    </label>
-                    <input
-                      id="img"
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      className="invisible"
-                      onChange={(e) =>
-                        field.onChange(e.target.files?.[0] ?? null)
-                      }
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
-        <Button type="submit" className="bg-primary text-secondary">
-          {type === "create" ? "Create" : "Update"}
+        <Button
+          type="submit"
+          className="bg-primary text-secondary"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <span>{type === "create" ? "Create" : "Update"}</span>
+          )}
         </Button>
       </form>
     </Form>

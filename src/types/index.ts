@@ -1,6 +1,6 @@
 import { JSX } from "react";
 import { Route } from "next";
-import {
+import type {
   Subject,
   Teacher,
   User,
@@ -9,8 +9,13 @@ import {
   Student,
   Grade,
   Lesson,
+  Exam,
+  Assignment,
+  Attendance,
+  Event,
+  Announcement,
+  Result,
 } from "@prisma/client";
-import { relative } from "path";
 
 export type UserRole = "user" | "admin" | "parent" | "teacher" | "student";
 
@@ -101,7 +106,7 @@ export type ClassTableDataType = Class & {
 };
 
 export type LessonTableDataType = Lesson & {
-  class: Grade;
+  class: Class;
   subject: {
     name: string;
   };
@@ -110,6 +115,137 @@ export type LessonTableDataType = Lesson & {
       name: string;
     };
   };
+};
+export type ExamTableDataType = Exam & {
+  lesson: LessonTableDataType;
+};
+
+export type ExamTableRelativeData = {
+  lessons: {
+    id: string;
+    name: string;
+  }[];
+};
+export type AssignmentTableDataType = Assignment & {
+  lesson: LessonTableDataType;
+};
+
+export type AssignmentTableRelativeData = {
+  lessons: {
+    id: string;
+    name: string;
+  }[];
+};
+
+// ===== ATTENDANCE =====
+export type AttendanceTableDataType = Attendance & {
+  student: {
+    id: string;
+    user: {
+      name: string;
+    };
+  };
+  lesson: {
+    id: string;
+    name: string;
+    teacher: {
+      user: {
+        name: string;
+      };
+    };
+  };
+};
+
+export type AttendanceTableRelativeData = {
+  students: {
+    id: string;
+    user: {
+      name: string;
+    };
+  }[];
+  lessons: {
+    id: string;
+    name: string;
+  }[];
+};
+
+// ===== EVENT =====
+export type EventTableDataType = Event & {
+  class?: {
+    id: string;
+    name: string;
+  } | null;
+};
+
+export type EventTableRelativeData = {
+  classes: {
+    id: string;
+    name: string;
+  }[];
+};
+
+// ===== ANNOUNCEMENT =====
+export type AnnouncementTableDataType = Announcement & {
+  class?: {
+    id: string;
+    name: string;
+  } | null;
+};
+
+export type AnnouncementTableRelativeData = {
+  classes: {
+    id: string;
+    name: string;
+  }[];
+};
+
+// ===== RESULT =====
+export type ResultTableDataType = Result & {
+  exam?: {
+    id: string;
+    title: string;
+    lesson: {
+      teacher: {
+        user: {
+          name: string;
+        };
+      };
+    };
+  } | null;
+  assignment?: {
+    id: string;
+    title: string;
+    lesson: {
+      teacher: {
+        user: {
+          name: string;
+        };
+      };
+    };
+  } | null;
+  student: {
+    id: string;
+    user: {
+      name: string;
+    };
+  };
+};
+
+export type ResultTableRelativeData = {
+  exams: {
+    id: string;
+    title: string;
+  }[];
+  assignments: {
+    id: string;
+    title: string;
+  }[];
+  students: {
+    id: string;
+    user: {
+      name: string;
+    };
+  }[];
 };
 
 export interface ClassTableRelativeData {
@@ -159,7 +295,7 @@ export interface LessonTableRelativeData {
   subjects: {
     id: string;
     name: string;
-  }[],
+  }[];
   classes: {
     id: string;
     name: string;

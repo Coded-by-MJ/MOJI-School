@@ -33,6 +33,11 @@ enum Day {
   FRIDAY
 }
 
+enum ResultType {
+  EXAM
+  ASSIGNMENT
+}
+
 model User {
   id                      String    @id @default(uuid())
   name                    String
@@ -242,6 +247,7 @@ model Result {
   assignmentId String?
   assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   studentId    String
+  type         ResultType  @default(EXAM)
   student      Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -250,7 +256,7 @@ model Result {
 model Attendance {
   id      String   @id @default(uuid())
   date    DateTime
-  present Boolean
+  present Boolean  @default(false)
 
   studentId String
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)

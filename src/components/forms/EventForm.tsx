@@ -19,36 +19,81 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  teacherFormSchema,
-  TeacherFormSchemaType,
+import { eventFormSchema, EventFormSchemaType } from "@/types/zod-schemas";
+import { renderClientError } from "@/utils/funcs";
+import { toast } from "sonner";
+import { useState } from "react";
+import { format, parseISO } from "date-fns";
 
-} from "@/types/zod-schemas";
-import { UploadCloud } from "lucide-react";
+import { EventTableDataType, EventTableRelativeData } from "@/types";
+import { Loader2 } from "lucide-react";
+import { createEvent, updateEvent } from "@/lib/mutation-actions";
 
 const EventForm = ({
   type,
   data,
+  onClose,
+  relativeData,
 }: {
   type: "create" | "update";
-  data?: Partial<TeacherFormSchemaType>;
+  data?: Partial<EventTableDataType>;
+  relativeData?: EventTableRelativeData;
+  onClose: () => void;
 }) => {
-  const form = useForm<TeacherFormSchemaType>({
-    resolver: zodResolver(teacherFormSchema),
+  const [isLoading, setIsLoading] = useState(false);
+
+  const classes = relativeData?.classes || [];
+
+  const form = useForm({
+    resolver: zodResolver(eventFormSchema),
+    mode: "onChange",
     defaultValues: {
-      firstName: data?.firstName || "",
-      lastName: data?.lastName || "",
-      email: data?.email || "",
-      phone: data?.phone || "",
-      address: data?.address || "",
-      bloodType: data?.bloodType || "",
-      birthday: data?.birthday || "",
-      sex: data?.sex || "male",
+      title: data?.title,
+      description: data?.description,
+      startTime:
+        data && data.startTime
+          ? new Date(data.startTime).toISOString()
+          : undefined,
+      endTime:
+        data && data.endTime ? new Date(data.endTime).toISOString() : undefined,
+      classId: data && data.classId ? data?.classId : undefined,
     },
   });
 
-  const onSubmit = (values: TeacherFormSchemaType) => {
-    console.log(values);
+  const handleCreate = async (values: EventFormSchemaType) => {
+    setIsLoading(true);
+
+    try {
+      const msg = await createEvent(values);
+      toast[msg.type](msg.message);
+      onClose();
+    } catch (error) {
+      renderClientError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdate = async (values: EventFormSchemaType) => {
+    setIsLoading(true);
+
+    try {
+      const msg = await updateEvent(data?.id!, values);
+      toast[msg.type](msg.message);
+      onClose();
+    } catch (error) {
+      renderClientError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSubmit = (values: EventFormSchemaType) => {
+    if (type === "create") {
+      handleCreate(values);
+    } else {
+      handleUpdate(values);
+    }
   };
 
   return (
@@ -57,175 +102,150 @@ const EventForm = ({
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col gap-8"
       >
-        {/* Personal Section */}
-        <span className="text-xs text-gray-400 font-medium">
-          Student Information
+        {/* Personal */}
+        <span className="text-xs text-secondary/80 font-medium">
+          Event Information
         </span>
-        <div className="flex justify-between flex-wrap gap-4">
+        <div className="flex justify-between w-full flex-wrap gap-4">
           <FormField
             control={form.control}
-            name="firstName"
+            name="title"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>First Name</FormLabel>
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <Input placeholder="First name" {...field} />
+                  <Input placeholder="title" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
-          />
-
+          />{" "}
           <FormField
             control={form.control}
-            name="lastName"
+            name="description"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Last Name</FormLabel>
+              <FormItem className="w-[45%]  md:w-[30%]">
+                <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Input placeholder="Last name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    readOnly={type === "update"}
-                    className="read-only:cursor-not-allowed read-only:opacity-50"
-                    placeholder="Email"
+                  <textarea
+                    placeholder="write description"
+                    className="w-full border rounded-md max-h-30"
                     {...field}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
-          />
-
+          />{" "}
           <FormField
             control={form.control}
-            name="phone"
+            name="startTime"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Phone</FormLabel>
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Start Time</FormLabel>
                 <FormControl>
-                  <Input placeholder="Phone number" {...field} />
+                  <Input
+                    type="datetime-local"
+                    min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                    value={
+                      field.value
+                        ? format(
+                            parseISO(field.value as string),
+                            "yyyy-MM-dd'T'HH:mm"
+                          )
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const timeValue = e.target.value;
+                      if (!timeValue) {
+                        field.onChange(undefined);
+                        return;
+                      }
+
+                      // convert back to UTC ISO string for storage
+                      const parsedDate = new Date(timeValue);
+                      field.onChange(parsedDate.toISOString());
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />{" "}
+          <FormField
+            control={form.control}
+            name="endTime"
+            render={({ field }) => (
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>End Time</FormLabel>
+                <FormControl>
+                  <Input
+                    type="datetime-local"
+                    min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+                    value={
+                      field.value
+                        ? format(
+                            parseISO(field.value as string),
+                            "yyyy-MM-dd'T'HH:mm"
+                          )
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const timeValue = e.target.value;
+                      if (!timeValue) {
+                        field.onChange(undefined);
+                        return;
+                      }
+
+                      // convert back to UTC ISO string for storage
+                      const parsedDate = new Date(timeValue);
+                      field.onChange(parsedDate.toISOString());
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="address"
+            name="classId"
             render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="Address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="birthday"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Birthday</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="bloodType"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Blood Type</FormLabel>
-                <FormControl>
-                  <Input placeholder="Blood type" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="sex"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Sex</FormLabel>
+              <FormItem className="w-[45%] md:w-[30%]">
+                <FormLabel>Class</FormLabel>
                 <Select
                   defaultValue={field.value}
                   onValueChange={field.onChange}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select sex" />
+                      <SelectValue placeholder="Select" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
+                    {classes.map((classItem) => (
+                      <SelectItem key={classItem.id} value={classItem.id}>
+                        {classItem.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )}
-          />
-
-          {/* File Upload */}
-          <FormField
-            control={form.control}
-            name="img"
-            render={({ field }) => (
-              <FormItem className="w-full md:w-[30%]">
-                <FormLabel>Upload Photo</FormLabel>
-                <FormControl>
-                  <div className="flex items-center gap-2">
-                    <label
-                      htmlFor="img"
-                      className="flex items-center gap-2 cursor-pointer text-sm text-primary"
-                    >
-                      <UploadCloud size={24} />
-                      <span>{field.value ? field.value.name : "Upload"}</span>
-                    </label>
-                    <input
-                      id="img"
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      className="invisible"
-                      onChange={(e) =>
-                        field.onChange(e.target.files?.[0] ?? null)
-                      }
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          />{" "}
         </div>
 
-        <Button type="submit" className="bg-primary text-secondary">
-          {type === "create" ? "Create" : "Update"}
+        <Button
+          type="submit"
+          className="bg-primary text-secondary"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <span>{type === "create" ? "Create" : "Update"}</span>
+          )}
         </Button>
       </form>
     </Form>

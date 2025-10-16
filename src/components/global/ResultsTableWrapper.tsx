@@ -2,26 +2,25 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { resultsData, role } from "@/lib/data";
-
 import { DataTable } from "@/components/global/DataTable";
 
 import FormDialog from "../forms/FormDialog";
 
-type Result = {
-  id: number;
-  subject: string;
-  student: string;
-  teacher: string;
-  date: string;
-  score: number;
-  type: string;
+import { ResultTableDataType, ResultTableRelativeData } from "@/types";
+import { ResultType, UserRole } from "@prisma/client";
+import { format } from "date-fns";
+
+type Props = {
+  data: ResultTableDataType[];
+  userRole: UserRole | null;
+  relativeData: ResultTableRelativeData;
 };
 
-function ResultsTableWrapper() {
-  const resultsActions: ColumnDef<Result>[] = ["teacher", "admin"].includes(
-    role
-  )
+function ResultsTableWrapper({ data, userRole, relativeData }: Props) {
+  const resultsActions: ColumnDef<ResultTableDataType>[] = [
+    "teacher",
+    "admin",
+  ].includes(userRole || "")
     ? [
         {
           header: "Actions",
@@ -34,6 +33,7 @@ function ResultsTableWrapper() {
                   type="update"
                   data={row.original}
                   id={row.original.id}
+                  relativeData={relativeData}
                 />{" "}
                 <FormDialog
                   table="result"
@@ -47,14 +47,18 @@ function ResultsTableWrapper() {
         },
       ]
     : [];
-  const columns: ColumnDef<Result>[] = [
+  const columns: ColumnDef<ResultTableDataType>[] = [
     {
-      header: "Subject Name",
-      accessorKey: "subject",
+      header: "Exam/Assignment Title",
+      id: "title",
       cell: ({ row }) => {
         return (
           <div className="flex flex-col">
-            <h3 className="font-semibold">{row.original.subject}</h3>
+            <h3 className="font-semibold">
+              {row.original.type === ResultType.EXAM
+                ? row.original.exam?.title || "N/A"
+                : row.original?.assignment?.title || "N/A"}
+            </h3>
           </div>
         );
       },
@@ -63,7 +67,7 @@ function ResultsTableWrapper() {
       header: "Student",
       accessorKey: "student",
       cell: ({ row }) => {
-        return <span>{row.original.student}</span>;
+        return <span>{row.original.student.user.name}</span>;
       },
     },
     {
@@ -78,19 +82,32 @@ function ResultsTableWrapper() {
       header: "Teacher",
       accessorKey: "teacher",
       cell: ({ row }) => {
-        return <span>{row.original.teacher}</span>;
+        return (
+          <span>
+            {row.original.type === ResultType.EXAM
+              ? row.original?.exam?.lesson.teacher.user.name || "N/A"
+              : row.original?.assignment?.lesson.teacher.user.name || "N/A"}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Type",
+      accessorKey: "type",
+      cell: ({ row }) => {
+        return <span>{row.original.type}</span>;
       },
     },
     {
       header: "Date",
       accessorKey: "date",
       cell: ({ row }) => {
-        return <span>{row.original.date}</span>;
+        return <span>{format(row.original.createdAt, "MM/dd/yyyy")}</span>;
       },
     },
     ...resultsActions,
   ];
 
-  return <DataTable columns={columns} data={resultsData} />;
+  return <DataTable columns={columns} data={data} />;
 }
 export default ResultsTableWrapper;

@@ -7,16 +7,22 @@ import { announcementsData, role } from "@/lib/data";
 import { DataTable } from "@/components/global/DataTable";
 import FormDialog from "../forms/FormDialog";
 
-type Announcement = {
-  id: number;
-  title: string;
-  class: string;
-  date: string;
+import { UserRole } from "@prisma/client";
+import {
+  AnnouncementTableDataType,
+  AnnouncementTableRelativeData,
+} from "@/types";
+import { format } from "date-fns";
+
+type Props = {
+  data: AnnouncementTableDataType[];
+  userRole: UserRole | null;
+  relativeData: AnnouncementTableRelativeData;
 };
 
-function AnnouncementsTableWrapper() {
-  const announcementsActions: ColumnDef<Announcement>[] =
-    role === "admin"
+function AnnouncementsTableWrapper({ data, userRole, relativeData }: Props) {
+  const announcementsActions: ColumnDef<AnnouncementTableDataType>[] =
+    userRole === "admin"
       ? [
           {
             header: "Actions",
@@ -42,7 +48,7 @@ function AnnouncementsTableWrapper() {
           },
         ]
       : [];
-  const columns: ColumnDef<Announcement>[] = [
+  const columns: ColumnDef<AnnouncementTableDataType>[] = [
     {
       header: "Title",
       accessorKey: "title",
@@ -58,7 +64,7 @@ function AnnouncementsTableWrapper() {
       header: "Class",
       accessorKey: "class",
       cell: ({ row }) => {
-        return <span>{row.original.class}</span>;
+        return <span>{row.original.class?.name || "N/A"}</span>;
       },
     },
 
@@ -66,12 +72,16 @@ function AnnouncementsTableWrapper() {
       header: "Date",
       accessorKey: "date",
       cell: ({ row }) => {
-        return <span>{row.original.date}</span>;
+        return (
+          <span>
+            {format(new Date(row.original.date), "dd/MM/yyyy HH:mm a")}
+          </span>
+        );
       },
     },
     ...announcementsActions,
   ];
 
-  return <DataTable columns={columns} data={announcementsData} />;
+  return <DataTable columns={columns} data={data} />;
 }
 export default AnnouncementsTableWrapper;

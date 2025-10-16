@@ -2,57 +2,60 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { assignmentsData, role } from "@/lib/data";
-
 import { DataTable } from "@/components/global/DataTable";
 
 import FormDialog from "../forms/FormDialog";
+import { AssignmentTableDataType, AssignmentTableRelativeData } from "@/types";
+import { UserRole } from "@prisma/client";
+import { format } from "date-fns";
 
-type Assignment = {
-  id: number;
-  subject: string;
-  class: string;
-  teacher: string;
-  dueDate: string;
+type Props = {
+  data: AssignmentTableDataType[];
+  userRole: UserRole | null;
+  relativeData: AssignmentTableRelativeData;
 };
 
-function AssignmentsTableWrapper() {
-    const assignmentsActions: ColumnDef<Assignment>[] = ["teacher", "admin"].includes(
-      role
-    )
-      ? [
-          {
-            header: "Actions",
-            id: "actions",
-            cell: ({ row }) => {
-              return (
-                <div className="flex items-center gap-2">
-                  <FormDialog
-                    table="assignment"
-                    type="update"
-                    data={row.original}
-                    id={row.original.id}
-                  />{" "}
-                  <FormDialog
-                    table="assignment"
-                    type="delete"
-                    data={row.original}
-                    id={row.original.id}
-                  />
-                </div>
-              );
-            },
+function AssignmentsTableWrapper({ data, userRole, relativeData }: Props) {
+  const assignmentsActions: ColumnDef<AssignmentTableDataType>[] = [
+    "teacher",
+    "admin",
+  ].includes(userRole || "")
+    ? [
+        {
+          header: "Actions",
+          id: "actions",
+          cell: ({ row }) => {
+            return (
+              <div className="flex items-center gap-2">
+                <FormDialog
+                  table="assignment"
+                  type="update"
+                  data={row.original}
+                  id={row.original.id}
+                  relativeData={relativeData}
+                />{" "}
+                <FormDialog
+                  table="assignment"
+                  type="delete"
+                  data={row.original}
+                  id={row.original.id}
+                />
+              </div>
+            );
           },
-        ]
-      : [];
-  const columns: ColumnDef<Assignment>[] = [
+        },
+      ]
+    : [];
+  const columns: ColumnDef<AssignmentTableDataType>[] = [
     {
       header: "Subject Name",
       accessorKey: "subject",
       cell: ({ row }) => {
         return (
           <div className="flex flex-col">
-            <h3 className="font-semibold">{row.original.subject}</h3>
+            <h3 className="font-semibold">
+              {row.original.lesson.subject.name}
+            </h3>
           </div>
         );
       },
@@ -61,7 +64,7 @@ function AssignmentsTableWrapper() {
       header: "Class",
       accessorKey: "class",
       cell: ({ row }) => {
-        return <span>{row.original.class}</span>;
+        return <span>{row.original.lesson.class.name}</span>;
       },
     },
 
@@ -69,19 +72,19 @@ function AssignmentsTableWrapper() {
       header: "Teacher",
       accessorKey: "teacher",
       cell: ({ row }) => {
-        return <span>{row.original.teacher}</span>;
+        return <span>{row.original.lesson.teacher.user.name}</span>;
       },
     },
     {
       header: "Due Date",
       accessorKey: "dueDate",
       cell: ({ row }) => {
-        return <span>{row.original.dueDate}</span>;
+        return <span>{format(row.original.dueDate, "MM/dd/yyyy")}</span>;
       },
     },
     ...assignmentsActions,
   ];
 
-  return <DataTable columns={columns} data={assignmentsData} />;
+  return <DataTable columns={columns} data={data} />;
 }
 export default AssignmentsTableWrapper;

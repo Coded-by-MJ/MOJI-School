@@ -8,18 +8,20 @@ import { DataTable } from "@/components/global/DataTable";
 
 import FormDialog from "../forms/FormDialog";
 
-type Event = {
-  id: number;
-  title: string;
-  class: string;
-  date: string;
-  startTime: string;
-  endTime: string;
+
+import { EventTableDataType, EventTableRelativeData } from "@/types";
+import {  UserRole } from "@prisma/client";
+import { format } from "date-fns";
+
+type Props = {
+  data: EventTableDataType[];
+  userRole: UserRole | null;
+  relativeData: EventTableRelativeData;
 };
 
-function EventsTableWrapper() {
-  const eventsActions: ColumnDef<Event>[] =
-    role === "admin"
+function EventsTableWrapper({ data, userRole, relativeData }: Props) {
+  const eventsActions: ColumnDef<EventTableDataType>[] =
+    userRole === "admin"
       ? [
           {
             header: "Actions",
@@ -31,6 +33,7 @@ function EventsTableWrapper() {
                     table="event"
                     type="update"
                     data={row.original}
+                    relativeData={relativeData}
                     id={row.original.id}
                   />{" "}
                   <FormDialog
@@ -45,7 +48,7 @@ function EventsTableWrapper() {
           },
         ]
       : [];
-  const columns: ColumnDef<Event>[] = [
+  const columns: ColumnDef<EventTableDataType>[] = [
     {
       header: "Title",
       accessorKey: "title",
@@ -61,7 +64,7 @@ function EventsTableWrapper() {
       header: "Class",
       accessorKey: "class",
       cell: ({ row }) => {
-        return <span>{row.original.class}</span>;
+        return <span>{row.original.class?.name || "N/A"}</span>;
       },
     },
 
@@ -69,26 +72,26 @@ function EventsTableWrapper() {
       header: "Date",
       accessorKey: "date",
       cell: ({ row }) => {
-        return <span>{row.original.date}</span>;
+        return <span>{format(new Date(row.original.startTime), "MM/dd/yyyy")}</span>;
       },
     },
     {
       header: "Start Time",
       accessorKey: "startTime",
       cell: ({ row }) => {
-        return <span>{row.original.startTime}</span>;
+        return <span>{format(row.original.startTime, "hh:mm a")}</span>;
       },
     },
     {
       header: "End Time",
       accessorKey: "endTime",
       cell: ({ row }) => {
-        return <span>{row.original.endTime}</span>;
+        return <span>{format(row.original.endTime, "hh:mm a")}</span>;
       },
     },
     ...eventsActions,
   ];
 
-  return <DataTable columns={columns} data={eventsData} />;
+  return <DataTable columns={columns} data={data} />;
 }
 export default EventsTableWrapper;

@@ -5,8 +5,26 @@ import { SlidersHorizontal, ListFilter, Plus } from "lucide-react";
 import ResultsTableWrapper from "@/components/global/ResultsTableWrapper";
 import FormDialog from "@/components/forms/FormDialog";
 import { role } from "@/lib/data";
+import { fetchResultList } from "@/lib/query-actions";
+import {
+  ResultTableDataType,
+  ResultTableRelativeData,
+  TableSearchParams,
+} from "@/types";
+import AllowedUserCompClient from "@/components/auth/AllowedUserCompClient";
 
-function ResultsListPage() {
+async function ResultsListPage({ searchParams }: PageProps<"/list/results">) {
+  const queryParams = await searchParams;
+  const filterParams: TableSearchParams = {
+    classId: queryParams.classId?.toString(),
+    teacherId: queryParams.teacherId?.toString(),
+    page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
+    search: queryParams.search?.toString(),
+  };
+  const { data, count, userRole, relativeData } = await fetchResultList<
+    ResultTableDataType[],
+    ResultTableRelativeData
+  >(filterParams);
   return (
     <section className="bg-muted gap-4 rounded-md  flex-col flex flex-1">
       <div className="flex p-4 w-full justify-between items-center">
@@ -25,16 +43,24 @@ function ResultsListPage() {
             <Button size={"icon"} className="rounded-full  bg-primary">
               <SlidersHorizontal className="size-4" />
             </Button>{" "}
-            {["admin", "teacher"].includes(role) && (
-              <FormDialog type="create" table="result" />
-            )}
+            <AllowedUserCompClient allowedRoles={["admin", "teacher"]}>
+              <FormDialog
+                type="create"
+                table="result"
+                relativeData={relativeData}
+              />
+            </AllowedUserCompClient>
           </div>
         </div>
       </div>
 
-      <ResultsTableWrapper />
+      <ResultsTableWrapper
+        data={data}
+        userRole={userRole}
+        relativeData={relativeData}
+      />
 
-      <Pagination />
+      <Pagination page={filterParams.page} count={count} />
     </section>
   );
 }

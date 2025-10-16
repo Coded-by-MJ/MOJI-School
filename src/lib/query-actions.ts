@@ -480,6 +480,517 @@ export async function fetchLessonList<T, R>(
   }
 }
 
+export async function fetchExamList<T, R>(
+  params: TableSearchParams
+): Promise<{
+  data: T;
+  count: number;
+  userRole: UserRole | null;
+  relativeData: R;
+}> {
+  const whereClause: Prisma.ExamWhereInput = {
+    ...(params.classId
+      ? {
+          lesson: {
+            classId: params.classId,
+          },
+        }
+      : {}),
+
+    ...(params.teacherId
+      ? {
+          lesson: {
+            teacherId: params.teacherId,
+          },
+        }
+      : {}),
+
+    ...(params.search
+      ? {
+          OR: [
+            {
+              lesson: {
+                subject: {
+                  name: { contains: params.search, mode: "insensitive" },
+                },
+              },
+            },
+            {
+              lesson: {
+                teacher: {
+                  user: {
+                    name: { contains: params.search, mode: "insensitive" },
+                  },
+                },
+              },
+            },
+          ],
+        }
+      : {}),
+  };
+
+  try {
+    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
+    const [exams, count, lessons] = await prisma.$transaction([
+      prisma.exam.findMany({
+        where: whereClause,
+        include: {
+          lesson: {
+            select: {
+              subject: { select: { name: true } },
+              teacher: { select: { user: { select: { name: true } } } },
+              class: { select: { name: true } },
+            },
+          },
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      }),
+      prisma.exam.count({ where: whereClause }),
+      prisma.lesson.findMany({
+        select: {
+          id: true,
+          name: true,
+        },
+      }),
+    ]);
+
+    return {
+      data: exams as T,
+      count,
+      userRole: user.role as UserRole,
+      relativeData: {
+        lessons,
+      } as R,
+    };
+  } catch (error) {
+    renderError(error);
+    return {
+      data: [] as T,
+      count: 0,
+      userRole: null,
+      relativeData: {
+        lessons: [],
+      } as R,
+    };
+  }
+}
+
+export async function fetchAssignmentList<T, R>(
+  params: TableSearchParams
+): Promise<{
+  data: T;
+  count: number;
+  userRole: UserRole | null;
+  relativeData: R;
+}> {
+  const whereClause: Prisma.AssignmentWhereInput = {
+    ...(params.classId
+      ? {
+          lesson: {
+            classId: params.classId,
+          },
+        }
+      : {}),
+
+    ...(params.teacherId
+      ? {
+          lesson: {
+            teacherId: params.teacherId,
+          },
+        }
+      : {}),
+
+    ...(params.search
+      ? {
+          OR: [
+            {
+              lesson: {
+                subject: {
+                  name: { contains: params.search, mode: "insensitive" },
+                },
+              },
+            },
+            {
+              lesson: {
+                teacher: {
+                  user: {
+                    name: { contains: params.search, mode: "insensitive" },
+                  },
+                },
+              },
+            },
+          ],
+        }
+      : {}),
+  };
+
+  try {
+    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
+    const [assignments, count, lessons] = await prisma.$transaction([
+      prisma.assignment.findMany({
+        where: whereClause,
+        include: {
+          lesson: {
+            select: {
+              subject: { select: { name: true } },
+              teacher: { select: { user: { select: { name: true } } } },
+              class: { select: { name: true } },
+            },
+          },
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      }),
+      prisma.assignment.count({ where: whereClause }),
+      prisma.lesson.findMany({
+        select: {
+          id: true,
+          name: true,
+        },
+      }),
+    ]);
+
+    return {
+      data: assignments as T,
+      count,
+      userRole: user.role as UserRole,
+      relativeData: {
+        lessons,
+      } as R,
+    };
+  } catch (error) {
+    renderError(error);
+    return {
+      data: [] as T,
+      count: 0,
+      userRole: null,
+      relativeData: {
+        lessons: [],
+      } as R,
+    };
+  }
+}
+
+export async function fetchResultList<T, R>(
+  params: TableSearchParams
+): Promise<{
+  data: T;
+  count: number;
+  userRole: UserRole | null;
+  relativeData: R;
+}> {
+  const whereClause: Prisma.ResultWhereInput = {
+    ...(params.classId
+      ? {
+          OR: [
+            { exam: { lesson: { classId: params.classId } } },
+            { assignment: { lesson: { classId: params.classId } } },
+          ],
+        }
+      : {}),
+    ...(params.teacherId
+      ? {
+          OR: [
+            { exam: { lesson: { teacherId: params.teacherId } } },
+            { assignment: { lesson: { teacherId: params.teacherId } } },
+          ],
+        }
+      : {}),
+    ...(params.search
+      ? {
+          student: {
+            user: {
+              name: { contains: params.search, mode: "insensitive" },
+            },
+          },
+        }
+      : {}),
+  };
+
+  try {
+    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
+    const [results, count, exams, assignments, students] =
+      await prisma.$transaction([
+        prisma.result.findMany({
+          where: whereClause,
+          include: {
+            exam: {
+              select: {
+                id: true,
+                title: true,
+                lesson: {
+                  select: {
+                    teacher: {
+                      select: {
+                        user: {
+                          select: {
+                            name: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            assignment: {
+              select: {
+                id: true,
+                title: true,
+                lesson: {
+                  select: {
+                    teacher: {
+                      select: {
+                        user: {
+                          select: {
+                            name: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            student: {
+              select: {
+                id: true,
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { updatedAt: "desc" },
+        }),
+        prisma.result.count({ where: whereClause }),
+        prisma.exam.findMany({ select: { id: true, title: true } }),
+        prisma.assignment.findMany({ select: { id: true, title: true } }),
+        prisma.student.findMany({
+          select: {
+            id: true,
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        }),
+      ]);
+
+    return {
+      data: results as T,
+      count,
+      userRole: user.role as UserRole,
+      relativeData: { exams, assignments, students } as R,
+    };
+  } catch (error) {
+    renderError(error);
+    return {
+      data: [] as T,
+      count: 0,
+      userRole: null,
+      relativeData: {
+        exams: [],
+        assignments: [],
+        students: [],
+      } as R,
+    };
+  }
+}
+
+export async function fetchAnnouncementList<T, R>(
+  params: TableSearchParams
+): Promise<{
+  data: T;
+  count: number;
+  userRole: UserRole | null;
+  relativeData: R;
+}> {
+  const whereClause: Prisma.AnnouncementWhereInput = {
+    ...(params.classId ? { classId: params.classId } : {}),
+    ...(params.search
+      ? {
+          title: { contains: params.search, mode: "insensitive" },
+        }
+      : {}),
+  };
+
+  try {
+    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
+    const [announcements, count, classes] = await prisma.$transaction([
+      prisma.announcement.findMany({
+        where: whereClause,
+        include: { class: { select: { id: true, name: true } } },
+        orderBy: { updatedAt: "desc" },
+      }),
+      prisma.announcement.count({ where: whereClause }),
+      prisma.class.findMany({ select: { id: true, name: true } }),
+    ]);
+
+    return {
+      data: announcements as T,
+      count,
+      userRole: user.role as UserRole,
+      relativeData: { classes } as R,
+    };
+  } catch (error) {
+    renderError(error);
+    return {
+      data: [] as T,
+      count: 0,
+      userRole: null,
+      relativeData: { classes: [] } as R,
+    };
+  }
+}
+
+export async function fetchEventList<T, R>(
+  params: TableSearchParams
+): Promise<{
+  data: T;
+  count: number;
+  userRole: UserRole | null;
+  relativeData: R;
+}> {
+  const whereClause: Prisma.EventWhereInput = {
+    ...(params.classId ? { classId: params.classId } : {}),
+    ...(params.search
+      ? {
+          title: { contains: params.search, mode: "insensitive" },
+        }
+      : {}),
+  };
+
+  try {
+    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
+    const [events, count, classes] = await prisma.$transaction([
+      prisma.event.findMany({
+        where: whereClause,
+        include: { class: { select: { id: true, name: true } } },
+        orderBy: { updatedAt: "desc" },
+      }),
+      prisma.event.count({ where: whereClause }),
+      prisma.class.findMany({ select: { id: true, name: true } }),
+    ]);
+
+    return {
+      data: events as T,
+      count,
+      userRole: user.role as UserRole,
+      relativeData: { classes } as R,
+    };
+  } catch (error) {
+    renderError(error);
+    return {
+      data: [] as T,
+      count: 0,
+      userRole: null,
+      relativeData: { classes: [] } as R,
+    };
+  }
+}
+
+export async function fetchAttendanceList<T, R>(
+  params: TableSearchParams
+): Promise<{
+  data: T;
+  count: number;
+  userRole: UserRole | null;
+  relativeData: R;
+}> {
+  const whereClause: Prisma.AttendanceWhereInput = {
+    ...(params.classId
+      ? {
+          lesson: { classId: params.classId },
+        }
+      : {}),
+    ...(params.teacherId
+      ? {
+          lesson: { teacherId: params.teacherId },
+        }
+      : {}),
+    ...(params.search
+      ? {
+          student: {
+            user: {
+              name: { contains: params.search, mode: "insensitive" },
+            },
+          },
+        }
+      : {}),
+  };
+
+  try {
+    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
+    const [attendances, count, students, lessons] = await prisma.$transaction([
+      prisma.attendance.findMany({
+        where: whereClause,
+        include: {
+          student: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          lesson: {
+            select: {
+              id: true,
+              name: true,
+              teacher: {
+                select: {
+                  user: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+      }),
+      prisma.attendance.count({ where: whereClause }),
+      prisma.student.findMany({
+        select: {
+          id: true,
+          user: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
+      prisma.lesson.findMany({ select: { id: true, name: true } }),
+    ]);
+
+    return {
+      data: attendances as T,
+      count,
+      userRole: user.role as UserRole,
+      relativeData: { students, lessons } as R,
+    };
+  } catch (error) {
+    renderError(error);
+    return {
+      data: [] as T,
+      count: 0,
+      userRole: null,
+      relativeData: { students: [], lessons: [] } as R,
+    };
+  }
+}
+
 export async function fetchRelativeAdminData<T>(): Promise<{
   data: T;
   userRole: UserRole | null;
