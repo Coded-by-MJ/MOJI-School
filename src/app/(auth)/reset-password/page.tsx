@@ -33,12 +33,16 @@ export const metadata: Metadata = {
 
 async function ResetPasswordPage({
   searchParams,
-}: PageProps<"reset-password">) {
+}: PageProps<"/reset-password">) {
   const { token, error } = await searchParams;
 
   return (
     <section className="grid custom-container grid-cols-1 place-items-center min-h-dvh">
-      {error || !token ? <ExpiredLink /> : <ResetPasswordForm token={token} />}
+      {error || !token ? (
+        <ExpiredLink />
+      ) : (
+        <ResetPasswordForm token={token.toString()} />
+      )}
     </section>
   );
 }

@@ -7,8 +7,9 @@ import { redirect } from "next/navigation";
 import { Route } from "next";
 import { revalidatePath } from "next/cache";
 import prisma from "./prisma";
+import { ActionState } from "@/types";
 
-const renderError = (error: unknown) => {
+const renderError = (error: unknown): ActionState => {
   if (error instanceof Error) {
     console.log(error.message);
   } else {
