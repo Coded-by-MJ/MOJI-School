@@ -36,7 +36,7 @@ export const fetchSession = async () => {
 export const getAuthUser = async () => {
   const session = await fetchSession();
   if (!session) {
-    throw new Error("You must be logged in to access this page.");
+    redirect("/sign-in");
   }
   if (session.user.banned) {
     throw new Error("Your account has been banned. Please contact support.");
