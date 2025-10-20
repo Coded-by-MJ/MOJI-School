@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "npm run migrate:deploy && prisma generate",
+    "postinstall": "prisma migrate deploy && prisma generate",
     "migrate:dev": "prisma migrate dev && prisma generate"
   },
   "prisma": {
