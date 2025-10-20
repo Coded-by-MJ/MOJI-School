@@ -1,4 +1,4 @@
 function MessagesListPage() {
-  return <div>MessagesListPage</div>;
+  return <div>Messages</div>;
 }
 export default MessagesListPage;

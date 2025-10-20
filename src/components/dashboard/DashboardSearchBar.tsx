@@ -3,8 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-// import { useDebounce } from "use-debounce";
-// import { useQueryClient } from "@tanstack/react-query";
+import { useDebounce } from "use-debounce";
 import { Route } from "next";
 
 type Props = {
@@ -20,39 +19,35 @@ function DashboardSearchBar({ searchKey, placeHolder }: Props) {
   const [searchVal, setSearchVal] = useState(
     searchParams?.get(searchKey) || ""
   );
-  //   const [debouncedSearchVal] = useDebounce(searchVal, 500);
+  const [debouncedSearchVal] = useDebounce(searchVal, 500);
 
   const handleSearchChange = (e: FormEvent<HTMLInputElement>) => {
     const searchValue = e.currentTarget.value;
     setSearchVal(searchValue);
   };
 
-  //   useEffect(() => {
-  //     const rawPage = searchParams?.get("page");
-  //     const currentVal = searchParams?.get(searchKey) || "";
+  useEffect(() => {
+    const rawPage = searchParams?.get("page");
+    const currentVal = searchParams?.get(searchKey) || "";
 
-  //     if (debouncedSearchVal.trim() === currentVal) return;
+    if (debouncedSearchVal.trim() === currentVal) return;
 
-  //     const queryParams: Record<string, string> = Object.fromEntries(
-  //       Object.entries({
-  //         [searchKey]: debouncedSearchVal.trim(),
-  //         page: debouncedSearchVal.trim().length > 0 ? "1" : rawPage || "",
-  //         status: searchParams?.get("status") || "",
-  //         //eslint-disable-next-line
-  //       }).filter(([_, value]) => value !== "")
-  //     );
+    const queryParams: Record<string, string> = Object.fromEntries(
+      Object.entries({
+        [searchKey]: debouncedSearchVal.trim(),
+        page: debouncedSearchVal.trim().length > 0 ? "1" : rawPage || "",
+        teacherId: searchParams?.get("teacherId") || "",
+        classId: searchParams.get("classId") || ""
+        //eslint-disable-next-line
+      }).filter(([_, value]) => value !== "")
+    );
 
-  //     queryClient.invalidateQueries({
-  //       queryKey: ["all-users", { page: 1, [searchKey]: debouncedSearchVal }],
-  //     });
-
-  //     const search = new URLSearchParams(queryParams).toString();
-  //     push(`${pathname}?${search}` as Route, { scroll: false });
-
-  //   }, [debouncedSearchVal, pathname, push, searchKey, searchParams]);
+    const search = new URLSearchParams(queryParams).toString();
+    push(`${pathname}?${search}` as Route, { scroll: false });
+  }, [debouncedSearchVal, pathname, push, searchKey, searchParams]);
 
   return (
-    <div className="group transition-colors w-full  duration-200 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]  relative flex h-full flex-1 items-center gap-2 rounded-3xl border bg-transparent px-4 py-2.5 ">
+    <div className="group transition-colors w-full  duration-200 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]  relative flex h-9 flex-1 items-center gap-2 rounded-3xl border border-secondary bg-transparent px-3 py-2 ">
       <button type="button" className="flex h-full items-center justify-center">
         <Search className="size-5 shrink-0 cursor-pointer transition-all text-main-blue " />
       </button>

@@ -30,7 +30,7 @@ const data = [
 
 const FinanceChart = () => {
   return (
-    <Card className="w-full  py-4 max-h-[450px] h-full rounded-xl">
+    <Card className="w-full bg-muted  py-4 max-h-[450px] h-full rounded-md">
       {/* HEADER */}
       <CardHeader className="flex px-4 flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-semibold">Finance</CardTitle>

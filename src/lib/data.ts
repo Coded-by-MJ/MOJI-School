@@ -76,7 +76,7 @@ export const teachersData = [
     address: "123 Main St, Anytown, USA",
   },
   {
-    id: 10,
+    id: 7,
     teacherId: "12345610890",
     name: "Allen Black",
     email: "allen@black.com",

@@ -15,18 +15,17 @@ import {
   Divide,
   BookMarked,
 } from "lucide-react";
-import { BsFillJournalBookmarkFill } from "react-icons/bs";
 import { IoIosPeople } from "react-icons/io";
-import { MdFormatListNumbered, MdListAlt } from "react-icons/md";
+import { MdFormatListNumbered } from "react-icons/md";
 import { RiBookShelfLine } from "react-icons/ri";
 
 const sidebarMenuLinks: DashboardLink[] = [
-  {
-    icon: <Home strokeWidth={1.5} />,
-    title: "Home",
-    url: "/",
-    access: ["admin", "teacher", "student", "parent"],
-  },
+  // {
+  //   icon: <Home strokeWidth={1.5} />,
+  //   title: "Home",
+  //   url: "/",
+  //   access: ["admin", "teacher", "student", "parent"],
+  // },
   {
     icon: <GraduationCap strokeWidth={1.5} />,
     title: "Teachers",
@@ -114,17 +113,18 @@ const sidebarOtherLinks: DashboardLink[] = [
     url: "/profile",
     access: ["admin", "teacher", "student", "parent"],
   },
-  {
-    icon: <Settings strokeWidth={1.5} />,
-    title: "Settings",
-    url: "/settings",
-    access: ["admin", "teacher", "student", "parent"],
-  },
+  // {
+  //   icon: <Settings strokeWidth={1.5} />,
+  //   title: "Settings",
+  //   url: "/settings",
+  //   access: ["admin", "teacher", "student", "parent"],
+  // },
   {
     icon: <LogOut strokeWidth={1.5} />,
     title: "Logout",
     url: "/",
     access: ["admin", "teacher", "student", "parent"],
+    isLogout: true,
   },
 ];
 export { sidebarMenuLinks, sidebarOtherLinks };

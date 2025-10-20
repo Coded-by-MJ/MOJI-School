@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   BarChart,
   Bar,
@@ -14,17 +13,13 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { MoreHorizontal } from "lucide-react";
 
-const data = [
-  { name: "Mon", present: 60, absent: 40 },
-  { name: "Tue", present: 70, absent: 60 },
-  { name: "Wed", present: 90, absent: 75 },
-  { name: "Thu", present: 90, absent: 75 },
-  { name: "Fri", present: 65, absent: 55 },
-];
+type Props = {
+  data: { name: string; present: number; absent: number }[];
+};
 
-const AttendanceChart = () => {
+const AttendanceChart = ({ data }: Props) => {
   return (
-    <Card className="w-full py-4 h-full rounded-xl">
+    <Card className="w-full py-4 h-full bg-muted rounded-md">
       {/* HEADER */}
       <CardHeader className="flex px-4 flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-semibold">Attendance</CardTitle>

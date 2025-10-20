@@ -1,6 +1,8 @@
+import HeroSection from "@/components/global/HeroSection"
+
 const Homepage = () => {
   return (
-    <div className=''>Homepage</div>
+    <HeroSection />
   )
 }
 
