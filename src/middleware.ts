@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth"; // your better-auth instance
 import { headers } from "next/headers";
-import { se } from "date-fns/locale";
 import { UserRole } from "@prisma/client";
+import { routeAccessMap } from "./utils";
 
 const privateRoutes = ["/list", "/profile", "/settings"];
 const authRoutes = [
@@ -36,14 +36,15 @@ export async function middleware(request: NextRequest) {
 
   // Force password reset if required
   if (session && session.user.isPasswordResetRequired) {
-    if (!pathname.startsWith("/reset-password")) {
-      return NextResponse.redirect(new URL("/reset-password", request.url));
+    if (pathname === "/" || isAuth) {
+      return NextResponse.next();
+    } else {
+      return NextResponse.redirect(new URL("/forgot-password", request.url));
     }
-    return NextResponse.next();
   }
 
   // If logged in and on an auth route → redirect to role dashboard
-  if (session && isAuth) {
+  if (session && !session.user.isPasswordResetRequired && isAuth) {
     const currentUserRole = session.user.role as UserRole;
     return NextResponse.redirect(
       new URL(roleRoutes[currentUserRole] || "/", request.url)
@@ -51,13 +52,23 @@ export async function middleware(request: NextRequest) {
   }
 
   // Prevent cross-role access
-//   if (session) {
-//     const currentUserRole = session.user.role as UserRole;
-//     const allowedPrefix = roleRoutes[currentUserRole];
-//     if (!pathname.startsWith(allowedPrefix)) {
-//       return NextResponse.redirect(new URL(allowedPrefix, request.url));
-//     }
-//   }
+
+  if (session) {
+    const currentUserRole = session.user.role as UserRole;
+
+    // Check if the route matches any rule in routeAccessMap
+    for (const [pattern, allowedRoles] of Object.entries(routeAccessMap)) {
+      const regex = new RegExp(`^${pattern}$`);
+      if (regex.test(pathname)) {
+        // If user's role isn't allowed → redirect
+        if (!allowedRoles.includes(currentUserRole)) {
+          const redirectTo = roleRoutes[currentUserRole] || "/";
+          return NextResponse.redirect(new URL(redirectTo, request.url));
+        }
+        break;
+      }
+    }
+  }
 
   // Allow otherwise
   return NextResponse.next();

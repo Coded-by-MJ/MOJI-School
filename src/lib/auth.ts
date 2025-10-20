@@ -10,6 +10,11 @@ import { ac, admin, teacher, student, parent } from "./permissions";
 
 import prisma from "./prisma";
 import { ReturnedType } from "./auth-types";
+import {
+  sendAccountDetailsEmailAction,
+  sendResetPasswordEmailAction,
+} from "./resendActions";
+import { getDefaultPassword } from "@/utils/funcs";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -20,15 +25,18 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
     sendResetPassword: async ({ user, url }) => {
-      console.log(url);
-      // const resetLink = `${process.env.BETTER_AUTH_URL}/api/auth/reset-password/${token}?callbackURL=/reset-password`;
-      //   await sendResetPasswordEmailAction({
-      //     email: user.email,
-      //     link: url,
-      //     firstName: user.name.split(" ")[0],
-      //   });
+      await sendResetPasswordEmailAction({
+        email: user.email,
+        link: url,
+        firstName: user.name.split(" ")[0],
+      });
     },
-    onPasswordReset: async ({ user }) => {},
+    onPasswordReset: async ({ user }) => {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isPasswordResetRequired: false },
+      });
+    },
   },
   user: {
     additionalFields: {
@@ -92,7 +100,16 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        after: async (user) => {},
+        after: async (user) => {
+          const link = `${process.env.NEXT_PUBLIC_APP_URL}/sign-in`;
+
+          await sendAccountDetailsEmailAction({
+            email: user.email,
+            name: user.name,
+            link,
+            password: getDefaultPassword(user.name),
+          });
+        },
       },
     },
   },

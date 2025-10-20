@@ -1,9 +1,14 @@
+import {
+  ResetPasswordEmailTemplate,
+  WelcomeAccountEmailTemplate,
+} from "@/components/global/EmailTemplate";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const fromEmail = process.env.FROM_EMAIL;
+const fromEmail = process.env.NEXT_PUBLIC_FROM_EMAIL;
 
 const renderError = (error: unknown) => {
+  console.log(error);
   if (error instanceof Error) {
     console.log(error.message);
   } else {
@@ -26,13 +31,48 @@ export const sendResetPasswordEmailAction = async ({
   try {
     const { error } = await resend.emails.send({
       from: `MOJI SCHOOL <${fromEmail}>`,
-      to: [email],
+
+      to: email,
+      react: ResetPasswordEmailTemplate({
+        name: firstName,
+        link: link,
+      }),
       subject: "Reset Your Password",
-      //   react: ResetPasswordEmailTemplate({
-      //     name: firstName,
-      //     link: link,
-      //   }),
-      text: "hello",
+    });
+
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    renderError(error);
+    throw new Error("Error sending email");
+  }
+};
+
+export const sendAccountDetailsEmailAction = async ({
+  email,
+  name,
+  link,
+  password,
+}: {
+  name: string;
+  link: string;
+  email: string;
+  password: string;
+}) => {
+  try {
+    const { error } = await resend.emails.send({
+      // from: `MOJI SCHOOL <${fromEmail}>`,
+      from: "onboarding@resend.dev",
+      to: email,
+      subject: "Welcome to MOJI School — Your Account Details",
+
+      react: WelcomeAccountEmailTemplate({
+        name,
+        link,
+        email,
+        password,
+      }),
     });
 
     if (error) {

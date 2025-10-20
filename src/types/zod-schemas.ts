@@ -68,7 +68,7 @@ export const studentFormSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required!" }),
   lastName: z.string().min(1, { message: "Last name is required!" }),
   email: z.string().min(1, { message: "Email is required!" }),
-  phone: z.string().min(1, { message: "Phone is required!" }).optional(),
+  phone: z.string().optional(),
   address: z.string().min(1, { message: "Address is required!" }),
   bloodType: z
     .string()

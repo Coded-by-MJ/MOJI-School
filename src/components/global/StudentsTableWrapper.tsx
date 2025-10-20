@@ -62,7 +62,7 @@ function StudentsTableWrapper({ data }: Props) {
       header: "Phone",
       accessorKey: "phone",
       cell: ({ row }) => {
-        return <span>{row.original.phone}</span>;
+        return <span>{row.original.phone || "N/A"}</span>;
       },
     },
     {

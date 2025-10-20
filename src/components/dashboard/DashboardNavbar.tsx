@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarTrigger } from "../ui/sidebar";
 import { SessionType } from "@/lib/auth-types";
 import { getDefaultImage } from "@/utils/funcs";
+import Link from "next/link";
 
 type Props = {
   user: SessionType["user"];
@@ -19,19 +20,31 @@ function DashboardNavbar({ user }: Props) {
       <SidebarTrigger className="md:hidden" />
 
       <div className="flex gap-6 items-center">
-        <Button size="icon" className="rounded-full bg-transparent relative ">
-          <MessageCircleMore className="size-5" />
+        <Button
+          size="icon"
+          className="rounded-full bg-transparent relative "
+          asChild
+        >
+          <Link href="/list/messages">
+            <MessageCircleMore className="size-5" />
 
-          <span className="absolute -top-2 -right-2 size-5 bg-red-500 rounded-full">
-            1
-          </span>
+            <span className="absolute -top-2 -right-2 text-center size-5 bg-red-500 rounded-full">
+              1
+            </span>
+          </Link>
         </Button>{" "}
-        <Button size="icon" className="rounded-full bg-transparent relative ">
-          <Megaphone className="size-5" />
+        <Button
+          size="icon"
+          className="rounded-full bg-transparent relative "
+          asChild
+        >
+          <Link href="/list/announcements">
+            <Megaphone className="size-5" />
 
-          <span className="absolute -top-2 -right-2 size-5 bg-red-500 rounded-full">
-            1
-          </span>
+            <span className="absolute -top-2 -right-2 size-5 text-center bg-red-500 rounded-full">
+              1
+            </span>
+          </Link>
         </Button>
         <div className="flex gap-1 flex-col">
           <span className="text-sm leading-3 font-semibold">{user.name}</span>

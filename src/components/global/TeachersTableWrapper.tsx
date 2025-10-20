@@ -87,7 +87,7 @@ function TeachersTableWrapper({ data }: Props) {
         return (
           <div className="flex items-center gap-2">
             <Button size={"icon"} className="rounded-full  bg-primary" asChild>
-              <Link href={`/list/teachers/${row.original.user.id}`}>
+              <Link href={`/list/teachers/${row.original.id}`}>
                 <Eye className="size-4" />
               </Link>
             </Button>

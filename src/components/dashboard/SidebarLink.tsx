@@ -16,6 +16,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronRight } from "lucide-react";
+import { useRouter } from "nextjs-toploader/app";
+import { authClient } from "@/lib/auth-client";
 type Props = {
   link: DashboardLink;
   userRole: string;
@@ -24,12 +26,24 @@ type Props = {
 function SidebarLink({ link, userRole }: Props) {
   const { access, url, icon, title, items } = link;
   const pathname = usePathname();
+
+  const router = useRouter();
   const isActive =
     pathname === url ||
     pathname.startsWith(url + "/") ||
     (items && items.some((item) => pathname.startsWith(item.url)));
 
   const isSubItemActive = (subUrl: string) => pathname === subUrl;
+
+  const handleLogout = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.replace("/sign-in"); // redirect to login page
+        },
+      },
+    });
+  };
 
   if (!access.some((role) => userRole === role)) {
     return null;
@@ -83,8 +97,9 @@ function SidebarLink({ link, userRole }: Props) {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        asChild
+        asChild={link.isLogout ? undefined : true}
         isActive={isActive}
+        onClick={link.isLogout ? handleLogout : undefined}
         tooltip={{
           children: title,
         }}
@@ -92,10 +107,17 @@ function SidebarLink({ link, userRole }: Props) {
           "group flex h-10 w-full [&>svg]:size-5   group-data-[collapsible=icon]:!pl-1.5   items-center gap-2 text-sm font-medium text-primary-foreground transition-all data-[active=true]:bg-primary "
         }
       >
-        <Link prefetch={true} href={url}>
-          {icon}
-          <span>{title}</span>
-        </Link>
+        {link.isLogout ? (
+          <>
+            {icon}
+            <span>{title}</span>
+          </>
+        ) : (
+          <Link prefetch={true} href={url}>
+            {icon}
+            <span>{title}</span>
+          </Link>
+        )}
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

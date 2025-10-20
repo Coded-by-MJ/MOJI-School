@@ -16,8 +16,7 @@ import AllowedUserCompClient from "@/components/auth/AllowedUserCompClient";
 async function ResultsListPage({ searchParams }: PageProps<"/list/results">) {
   const queryParams = await searchParams;
   const filterParams: TableSearchParams = {
-    classId: queryParams.classId?.toString(),
-    teacherId: queryParams.teacherId?.toString(),
+    studentId: queryParams.studentId?.toString(),
     page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
     search: queryParams.search?.toString(),
   };

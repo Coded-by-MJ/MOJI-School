@@ -7,15 +7,15 @@ function PasswordResetLinkSent({
   setShowPasswordResetLinkSent: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   return (
-    <div className="w-full max-w-[400px] flex gap-4 flex-col p-6 rounded-[1.25rem] border border-[#E6E8EC80] bg-white shadow-sm shadow-darker-grey/10">
+    <div className="w-full max-w-[400px] flex gap-4 flex-col p-6 rounded-[1.25rem] border border-[#E6E8EC80] bg-muted shadow-sm shadow-darker-grey/10">
       <div className="flex flex-col justify-center items-center gap-2">
         <CheckCircle2 className="size-14 text-green-500" />
 
-        <h1 className="text-center text-primary font-dm text-2xl font-bold">
+        <h1 className="text-center text-secondary font-dm text-2xl font-bold">
           Password Reset Link Sent
         </h1>
       </div>
-      <p className="text-primary text-center text-base ">
+      <p className="text-secondary text-center text-base ">
         {" "}
         We&apos;ve sent a password reset link to your inbox. Please check your
         email and click the link to complete your sign-up.
@@ -28,7 +28,7 @@ function PasswordResetLinkSent({
             type="button"
             variant={"link"}
             onClick={() => setShowPasswordResetLinkSent(false)}
-            className="text-primary underline"
+            className="text-secondary underline"
           >
             Request New Link
           </Button>{" "}

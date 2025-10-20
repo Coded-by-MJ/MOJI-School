@@ -24,6 +24,7 @@ import {
 } from "@/utils/funcs";
 import { auth } from "./auth";
 import { headers } from "next/headers";
+import { isUserAllowed } from "./users";
 
 const renderError = (error: unknown): ActionState => {
   console.log(error);
@@ -146,11 +147,43 @@ export const updateTeacher = async (
   });
 
   revalidatePath("/list/teachers");
+  revalidatePath(`/list/teachers/${userId}`);
 
   return {
     message: "Teacher updated successfully",
     type: "success",
   };
+};
+
+export const deleteTeacher = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const userId = data.get("userId") as string | undefined;
+
+  await isUserAllowed(["admin"]);
+
+  if (!userId) {
+    return {
+      message: "Teacher User ID is required.",
+      type: "error",
+    };
+  }
+
+  try {
+    await prisma.user.delete({
+      where: {
+        id: userId,
+      },
+    });
+    revalidatePath("/list/teachers");
+    return {
+      message: "Teacher deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
 };
 
 export const createParent = async (
@@ -250,6 +283,36 @@ export const updateParent = async (
     message: "Parent updated successfully",
     type: "success",
   };
+};
+export const deleteParent = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+  const userId = data.get("userId") as string | undefined;
+
+  await isUserAllowed(["admin"]);
+
+  if (!userId) {
+    return {
+      message: "Parent User ID is required.",
+      type: "error",
+    };
+  }
+
+  try {
+    await prisma.user.delete({
+      where: {
+        id: userId  ,
+      },
+    });
+    revalidatePath("/list/parents");
+    return {
+      message: "Parent deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
 };
 
 export const createStudent = async (
@@ -371,10 +434,43 @@ export const updateStudent = async (
   });
 
   revalidatePath("/list/students");
+  revalidatePath(`/list/students/${userId}`);
+
   return {
     message: "Student updated successfully",
     type: "success",
   };
+};
+
+export const deleteStudent = async (
+  currentState: ActionState,
+  data: FormData
+): Promise<ActionState> => {
+    const userId = data.get("userId") as string | undefined;
+
+  await isUserAllowed(["admin"]);
+
+  if (!userId) {
+    return {
+      message: "Student User ID is required.",
+      type: "error",
+    };
+  }
+
+  try {
+    await prisma.user.delete({
+      where: {
+        id: userId,
+      },
+    });
+    revalidatePath("/list/students");
+    return {
+      message: "Student deleted successfully",
+      type: "success",
+    };
+  } catch (error) {
+    return renderError(error);
+  }
 };
 
 export const createSubject = async (
@@ -679,17 +775,6 @@ export const deleteAssignment = async (
   }
 };
 
-
-
-
-
-
-
-
-
-
-
-
 export const createResult = async (
   data: ResultFormSchemaType
 ): Promise<ActionState> => {
@@ -748,8 +833,6 @@ export const deleteResult = async (
     return renderError(error);
   }
 };
-
-
 
 export const createAttendance = async (
   data: AttendanceFormSchemaType
@@ -810,8 +893,6 @@ export const deleteAttendance = async (
   }
 };
 
-
-
 export const createAnnouncement = async (
   data: AnnouncementFormSchemaType
 ): Promise<ActionState> => {
@@ -870,7 +951,6 @@ export const deleteAnnouncement = async (
     return renderError(error);
   }
 };
-
 
 export const createEvent = async (
   data: EventFormSchemaType

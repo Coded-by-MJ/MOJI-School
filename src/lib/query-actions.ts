@@ -2,8 +2,8 @@
 
 import { TableSearchParams } from "@/types";
 import prisma from "./prisma";
-import { isUserAllowed } from "./users";
-import { Grade, Prisma, UserRole } from "@prisma/client";
+import { getAuthUser, isUserAllowed } from "./users";
+import { Prisma, UserRole, UserSex } from "@prisma/client";
 import { ITEMS_PER_PAGE } from "@/utils";
 
 const renderError = (error: unknown) => {
@@ -22,6 +22,7 @@ const renderError = (error: unknown) => {
 export async function fetchTeacherList<T, R>(
   params: TableSearchParams
 ): Promise<{ data: T; count: number; relativeData: R }> {
+  await isUserAllowed(["admin", "teacher"]);
   const whereClause: Prisma.TeacherWhereInput = {
     ...(params.classId
       ? {
@@ -45,7 +46,6 @@ export async function fetchTeacherList<T, R>(
   };
 
   try {
-    await isUserAllowed(["admin", "teacher"]);
     const [teachers, count, subjects] = await prisma.$transaction([
       prisma.teacher.findMany({
         where: whereClause,
@@ -93,6 +93,7 @@ export async function fetchTeacherList<T, R>(
 export async function fetchStudentList<T, R>(
   params: TableSearchParams
 ): Promise<{ data: T; count: number; relativeData: R }> {
+  await isUserAllowed(["admin", "teacher"]);
   const whereClause: Prisma.StudentWhereInput = {
     ...(params.teacherId
       ? {
@@ -117,7 +118,6 @@ export async function fetchStudentList<T, R>(
       : {}),
   };
   try {
-    await isUserAllowed(["admin", "teacher"]);
     const [students, count, grades, classes, parents] =
       await prisma.$transaction([
         prisma.student.findMany({
@@ -179,6 +179,8 @@ export async function fetchStudentList<T, R>(
 export async function fetchParentList<T>(
   params: TableSearchParams
 ): Promise<{ data: T; count: number; userRole: UserRole | null }> {
+  const user = await isUserAllowed(["admin", "teacher"]);
+
   const whereClause: Prisma.ParentWhereInput = {
     ...(params.search
       ? {
@@ -192,7 +194,6 @@ export async function fetchParentList<T>(
       : {}),
   };
   try {
-    const user = await isUserAllowed(["admin", "teacher"]);
     const [parents, count] = await prisma.$transaction([
       prisma.parent.findMany({
         where: whereClause,
@@ -221,7 +222,7 @@ export async function fetchParentList<T>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: user.role as UserRole,
     };
   }
 }
@@ -233,6 +234,8 @@ export async function fetchSubjectList<T, R>(
   userRole: UserRole | null;
   relativeData: R;
 }> {
+  const user = await isUserAllowed(["admin"]);
+
   const whereClause: Prisma.SubjectWhereInput = {
     ...(params.search
       ? {
@@ -244,7 +247,6 @@ export async function fetchSubjectList<T, R>(
       : {}),
   };
   try {
-    const user = await isUserAllowed(["admin"]);
     const [subjects, count, teachers] = await prisma.$transaction([
       prisma.subject.findMany({
         where: whereClause,
@@ -284,7 +286,7 @@ export async function fetchSubjectList<T, R>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: user.role as UserRole,
       relativeData: {
         teachers: [],
       } as R,
@@ -300,6 +302,8 @@ export async function fetchClassList<T, R>(
   userRole: UserRole | null;
   relativeData: R;
 }> {
+  const user = await isUserAllowed(["admin", "teacher"]);
+
   const whereClause: Prisma.ClassWhereInput = {
     ...(params.teacherId
       ? {
@@ -316,7 +320,6 @@ export async function fetchClassList<T, R>(
       : {}),
   };
   try {
-    const user = await isUserAllowed(["admin", "teacher"]);
     const [classes, count, grades, teachers] = await prisma.$transaction([
       prisma.class.findMany({
         where: whereClause,
@@ -360,7 +363,7 @@ export async function fetchClassList<T, R>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: user.role as UserRole,
       relativeData: {
         grades: [],
         teachers: [],
@@ -377,6 +380,8 @@ export async function fetchLessonList<T, R>(
   userRole: UserRole | null;
   relativeData: R;
 }> {
+  const user = await isUserAllowed(["admin", "teacher"]);
+
   const whereClause: Prisma.LessonWhereInput = {
     ...(params.classId
       ? {
@@ -408,7 +413,6 @@ export async function fetchLessonList<T, R>(
       : {}),
   };
   try {
-    const user = await isUserAllowed(["admin", "teacher"]);
     const [lessons, count, teachers, subjects, classes] =
       await prisma.$transaction([
         prisma.lesson.findMany({
@@ -470,7 +474,7 @@ export async function fetchLessonList<T, R>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: user.role as UserRole,
       relativeData: {
         teachers: [],
         subjects: [],
@@ -488,6 +492,8 @@ export async function fetchExamList<T, R>(
   userRole: UserRole | null;
   relativeData: R;
 }> {
+  const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
+
   const whereClause: Prisma.ExamWhereInput = {
     ...(params.classId
       ? {
@@ -530,7 +536,6 @@ export async function fetchExamList<T, R>(
   };
 
   try {
-    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
     const [exams, count, lessons] = await prisma.$transaction([
       prisma.exam.findMany({
         where: whereClause,
@@ -569,7 +574,7 @@ export async function fetchExamList<T, R>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: user.role as UserRole,
       relativeData: {
         lessons: [],
       } as R,
@@ -585,6 +590,13 @@ export async function fetchAssignmentList<T, R>(
   userRole: UserRole | null;
   relativeData: R;
 }> {
+  const { id: currentUserId, role } = await isUserAllowed([
+    "admin",
+    "teacher",
+    "student",
+    "parent",
+  ]);
+
   const whereClause: Prisma.AssignmentWhereInput = {
     ...(params.classId
       ? {
@@ -604,30 +616,53 @@ export async function fetchAssignmentList<T, R>(
 
     ...(params.search
       ? {
-          OR: [
-            {
-              lesson: {
-                subject: {
-                  name: { contains: params.search, mode: "insensitive" },
-                },
-              },
+          lesson: {
+            subject: {
+              name: { contains: params.search, mode: "insensitive" },
             },
-            {
-              lesson: {
-                teacher: {
-                  user: {
-                    name: { contains: params.search, mode: "insensitive" },
-                  },
-                },
-              },
-            },
-          ],
+          },
         }
       : {}),
   };
 
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher": {
+      const existing = whereClause.lesson || {};
+      existing.teacherId = currentUserId;
+      whereClause.lesson = { ...existing };
+      break;
+    }
+    case "student": {
+      const existing = whereClause.lesson || {};
+      existing.class = {
+        students: {
+          some: {
+            id: currentUserId,
+          },
+        },
+      };
+      whereClause.lesson = { ...existing };
+      break;
+    }
+    case "parent": {
+      const existing = whereClause.lesson || {};
+      existing.class = {
+        students: {
+          some: {
+            parentId: currentUserId!,
+          },
+        },
+      };
+      whereClause.lesson = { ...existing };
+      break;
+    }
+    default:
+      break;
+  }
+
   try {
-    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
     const [assignments, count, lessons] = await prisma.$transaction([
       prisma.assignment.findMany({
         where: whereClause,
@@ -656,7 +691,7 @@ export async function fetchAssignmentList<T, R>(
     return {
       data: assignments as T,
       count,
-      userRole: user.role as UserRole,
+      userRole: role as UserRole,
       relativeData: {
         lessons,
       } as R,
@@ -666,7 +701,7 @@ export async function fetchAssignmentList<T, R>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: role as UserRole,
       relativeData: {
         lessons: [],
       } as R,
@@ -682,36 +717,61 @@ export async function fetchResultList<T, R>(
   userRole: UserRole | null;
   relativeData: R;
 }> {
+  const { role, id: currentUserId } = await isUserAllowed([
+    "admin",
+    "teacher",
+    "student",
+    "parent",
+  ]);
+
   const whereClause: Prisma.ResultWhereInput = {
-    ...(params.classId
+    ...(params.studentId
       ? {
-          OR: [
-            { exam: { lesson: { classId: params.classId } } },
-            { assignment: { lesson: { classId: params.classId } } },
-          ],
-        }
-      : {}),
-    ...(params.teacherId
-      ? {
-          OR: [
-            { exam: { lesson: { teacherId: params.teacherId } } },
-            { assignment: { lesson: { teacherId: params.teacherId } } },
-          ],
+          studentId: params.studentId,
         }
       : {}),
     ...(params.search
       ? {
-          student: {
-            user: {
-              name: { contains: params.search, mode: "insensitive" },
+          OR: [
+            {
+              exam: { title: { contains: params.search, mode: "insensitive" } },
             },
-          },
+            {
+              student: {
+                user: {
+                  name: { contains: params.search, mode: "insensitive" },
+                },
+              },
+            },
+          ],
         }
       : {}),
   };
 
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      whereClause.OR = [
+        { exam: { lesson: { teacherId: currentUserId } } },
+        { assignment: { lesson: { teacherId: currentUserId } } },
+      ];
+      break;
+
+    case "student":
+      whereClause.studentId = currentUserId;
+      break;
+
+    case "parent":
+      whereClause.student = {
+        parentId: currentUserId,
+      };
+      break;
+    default:
+      break;
+  }
+
   try {
-    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
     const [results, count, exams, assignments, students] =
       await prisma.$transaction([
         prisma.result.findMany({
@@ -786,7 +846,7 @@ export async function fetchResultList<T, R>(
     return {
       data: results as T,
       count,
-      userRole: user.role as UserRole,
+      userRole: role as UserRole,
       relativeData: { exams, assignments, students } as R,
     };
   } catch (error) {
@@ -794,7 +854,7 @@ export async function fetchResultList<T, R>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: role as UserRole,
       relativeData: {
         exams: [],
         assignments: [],
@@ -812,17 +872,29 @@ export async function fetchAnnouncementList<T, R>(
   userRole: UserRole | null;
   relativeData: R;
 }> {
+  const { role, id } = await isUserAllowed([
+    "admin",
+    "teacher",
+    "student",
+    "parent",
+  ]);
+
+  const roleConditions = {
+    teacher: { lessons: { some: { teacherId: id } } },
+    student: { students: { some: { id: id } } },
+    parent: { students: { some: { parentId: id } } },
+  };
   const whereClause: Prisma.AnnouncementWhereInput = {
-    ...(params.classId ? { classId: params.classId } : {}),
     ...(params.search
       ? {
           title: { contains: params.search, mode: "insensitive" },
         }
       : {}),
+    classId: null,
+    class: roleConditions[role as keyof typeof roleConditions] || {},
   };
 
   try {
-    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
     const [announcements, count, classes] = await prisma.$transaction([
       prisma.announcement.findMany({
         where: whereClause,
@@ -836,7 +908,7 @@ export async function fetchAnnouncementList<T, R>(
     return {
       data: announcements as T,
       count,
-      userRole: user.role as UserRole,
+      userRole: role as UserRole,
       relativeData: { classes } as R,
     };
   } catch (error) {
@@ -844,7 +916,7 @@ export async function fetchAnnouncementList<T, R>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: role as UserRole,
       relativeData: { classes: [] } as R,
     };
   }
@@ -858,17 +930,29 @@ export async function fetchEventList<T, R>(
   userRole: UserRole | null;
   relativeData: R;
 }> {
+  const { role, id } = await isUserAllowed([
+    "admin",
+    "teacher",
+    "student",
+    "parent",
+  ]);
+
+  const roleConditions = {
+    teacher: { lessons: { some: { teacherId: id } } },
+    student: { students: { some: { id: id } } },
+    parent: { students: { some: { parentId: id } } },
+  };
   const whereClause: Prisma.EventWhereInput = {
-    ...(params.classId ? { classId: params.classId } : {}),
     ...(params.search
       ? {
           title: { contains: params.search, mode: "insensitive" },
         }
       : {}),
+    classId: null,
+    class: roleConditions[role as keyof typeof roleConditions] || {},
   };
 
   try {
-    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
     const [events, count, classes] = await prisma.$transaction([
       prisma.event.findMany({
         where: whereClause,
@@ -882,7 +966,7 @@ export async function fetchEventList<T, R>(
     return {
       data: events as T,
       count,
-      userRole: user.role as UserRole,
+      userRole: role as UserRole,
       relativeData: { classes } as R,
     };
   } catch (error) {
@@ -890,7 +974,7 @@ export async function fetchEventList<T, R>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: role as UserRole,
       relativeData: { classes: [] } as R,
     };
   }
@@ -904,6 +988,8 @@ export async function fetchAttendanceList<T, R>(
   userRole: UserRole | null;
   relativeData: R;
 }> {
+  const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
+
   const whereClause: Prisma.AttendanceWhereInput = {
     ...(params.classId
       ? {
@@ -927,7 +1013,6 @@ export async function fetchAttendanceList<T, R>(
   };
 
   try {
-    const user = await isUserAllowed(["admin", "teacher", "student", "parent"]);
     const [attendances, count, students, lessons] = await prisma.$transaction([
       prisma.attendance.findMany({
         where: whereClause,
@@ -985,7 +1070,7 @@ export async function fetchAttendanceList<T, R>(
     return {
       data: [] as T,
       count: 0,
-      userRole: null,
+      userRole: user.role as UserRole,
       relativeData: { students: [], lessons: [] } as R,
     };
   }
@@ -995,8 +1080,8 @@ export async function fetchRelativeAdminData<T>(): Promise<{
   data: T;
   userRole: UserRole | null;
 }> {
+  const user = await isUserAllowed(["admin"]);
   try {
-    const user = await isUserAllowed(["admin"]);
     const [gradesWithClasses, parents] = await prisma.$transaction([
       prisma.grade.findMany({
         include: {
@@ -1037,7 +1122,356 @@ export async function fetchRelativeAdminData<T>(): Promise<{
     renderError(error);
     return {
       data: {} as T,
-      userRole: null,
+      userRole: user.role as UserRole,
     };
   }
 }
+
+export const fetchStudentsChartData = async () => {
+  try {
+    const data = await prisma.student.groupBy({
+      by: ["sex"],
+      _count: {
+        _all: true,
+      },
+      orderBy: {
+        sex: "asc",
+      },
+    });
+
+    const boys = data.find((d) => d.sex === UserSex.MALE)?._count._all || 0;
+    const girls = data.find((d) => d.sex === UserSex.FEMALE)?._count._all || 0;
+
+    return {
+      boys,
+      girls,
+    };
+  } catch (error) {
+    renderError(error);
+    return {
+      boys: 0,
+      girls: 0,
+    };
+  }
+};
+
+export const fetchAttendanceChartData = async () => {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+  const lastMonday = new Date(today);
+
+  lastMonday.setDate(today.getDate() - daysSinceMonday);
+
+  const resData = await prisma.attendance.findMany({
+    where: {
+      date: {
+        gte: lastMonday,
+      },
+    },
+    select: {
+      date: true,
+      present: true,
+    },
+  });
+
+  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+  const attendanceMap: { [key: string]: { present: number; absent: number } } =
+    {
+      Mon: { present: 0, absent: 0 },
+      Tue: { present: 0, absent: 0 },
+      Wed: { present: 0, absent: 0 },
+      Thu: { present: 0, absent: 0 },
+      Fri: { present: 0, absent: 0 },
+    };
+
+  resData.forEach((item) => {
+    const itemDate = new Date(item.date);
+    const dayOfWeek = itemDate.getDay();
+
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      const dayName = daysOfWeek[dayOfWeek - 1];
+
+      if (item.present) {
+        attendanceMap[dayName].present += 1;
+      } else {
+        attendanceMap[dayName].absent += 1;
+      }
+    }
+  });
+
+  const data = daysOfWeek.map((day) => ({
+    name: day,
+    present: attendanceMap[day].present,
+    absent: attendanceMap[day].absent,
+  }));
+  return data;
+};
+
+export const fetchEventsData = async (dateParam: string | undefined) => {
+  const date = dateParam ? new Date(dateParam) : new Date();
+
+  const data = await prisma.event.findMany({
+    where: {
+      startTime: {
+        gte: new Date(date.setHours(0, 0, 0, 0)),
+        lte: new Date(date.setHours(23, 59, 59, 999)),
+      },
+    },
+  });
+  return data;
+};
+
+export const fetchUserRoleData = async () => {
+  try {
+    const [teachers, parents, students] = await prisma.$transaction([
+      prisma.teacher.count(),
+      prisma.parent.count(),
+      prisma.student.count(),
+    ]);
+
+    return {
+      teachersCount: teachers || 0,
+      parentsCount: parents || 0,
+      studentsCount: students || 0,
+      staffCount: 0,
+    };
+  } catch (error) {
+    renderError(error);
+    return {
+      teachersCount: 0,
+      parentsCount: 0,
+      studentsCount: 0,
+      staffCount: 0,
+    };
+  }
+};
+
+export const fetchAnnouncementData = async () => {
+  const { id, role } = await getAuthUser();
+
+  const roleConditions = {
+    teacher: { lessons: { some: { teacherId: id } } },
+    student: { students: { some: { id: id } } },
+    parent: { students: { some: { parentId: id } } },
+  };
+
+  try {
+    const data = await prisma.announcement.findMany({
+      take: 3,
+      orderBy: { date: "desc" },
+      where: {
+        ...(role !== "admin" && {
+          OR: [
+            { classId: null },
+            {
+              class: roleConditions[role as keyof typeof roleConditions] || {},
+            },
+          ],
+        }),
+      },
+    });
+    return data;
+  } catch (error) {
+    return [];
+  }
+};
+
+export const fetchSingleTeacherData = async (userId: string) => {
+  const { role, id } = await getAuthUser();
+  try {
+    const [data, subjects] = await prisma.$transaction([
+      prisma.teacher.findUnique({
+        where: { id: userId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              role: true,
+            },
+          },
+          subjects: true,
+          _count: {
+            select: {
+              lessons: true,
+              classes: true,
+            },
+          },
+        },
+      }),
+
+      prisma.subject.findMany({
+        select: {
+          id: true,
+          name: true,
+        },
+      }),
+    ]);
+
+    if (!data) {
+      return null;
+    }
+
+    return {
+      teacher: {
+        ...data,
+      },
+      user: data.user,
+      subjectsCount: data.subjects.length,
+      lessonsCount: data._count.lessons,
+      classesCount: data._count.classes,
+      currentUserRole: role as UserRole,
+      currentUserId: id,
+      relativeData: {
+        subjects,
+      },
+    };
+  } catch (error) {
+    renderError(error);
+    return null;
+  }
+};
+
+export const fetchSingleStudentData = async (userId: string) => {
+  const { role, id } = await getAuthUser();
+  try {
+    const [data, grades, classes, parents] = await prisma.$transaction([
+      prisma.student.findUnique({
+        where: { id: userId },
+
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              role: true,
+            },
+          },
+          grade: true,
+          class: {
+            include: {
+              _count: {
+                select: {
+                  lessons: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+
+      prisma.grade.findMany(),
+      prisma.class.findMany({
+        select: {
+          id: true,
+          name: true,
+          capacity: true,
+          _count: { select: { students: true } },
+        },
+      }),
+      prisma.parent.findMany({
+        select: {
+          id: true,
+          user: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    if (!data) {
+      return null;
+    }
+
+    return {
+      student: {
+        ...data,
+      },
+      user: data.user,
+      lessonsCount: data.class._count.lessons,
+      currentUserRole: role as UserRole,
+      currentUserId: id,
+      relativeData: {
+        grades,
+        classes,
+        parents,
+      },
+    };
+  } catch (error) {
+    renderError(error);
+    return null;
+  }
+};
+
+export const fetchScheduleData = async (
+  id: string,
+  type: "teacherId" | "classId"
+) => {
+  const dataRes = await prisma.lesson.findMany({
+    where: {
+      ...(type === "teacherId" ? { teacherId: id } : { classId: id }),
+    },
+  });
+
+  const data = dataRes.map((lesson) => ({
+    title: lesson.name,
+    start: lesson.startTime,
+    end: lesson.endTime,
+  }));
+
+  return data;
+};
+
+export const fetchStudentClass = async (id: string) => {
+  try {
+    const data = await prisma.student.findUnique({
+      where: { userId: id },
+      select: {
+        class: true,
+      },
+    });
+    if (!data) {
+      return null;
+    }
+    return data.class;
+  } catch (error) {
+    renderError(error);
+    return null;
+  }
+};
+export const fetchParentStudents = async (id: string) => {
+  try {
+    const data = await prisma.parent.findUnique({
+      where: { userId: id },
+      select: {
+        students: {
+          select: {
+            id: true,
+            classId: true,
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!data) {
+      return [];
+    }
+    return data.students;
+  } catch (error) {
+    renderError(error);
+    return [];
+  }
+};

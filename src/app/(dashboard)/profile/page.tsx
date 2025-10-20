@@ -1,4 +1,10 @@
+
+
 function ProfilePage() {
-  return <div>ProfilePage</div>;
+  return (
+    <div>
+      
+    </div>
+  );
 }
 export default ProfilePage;

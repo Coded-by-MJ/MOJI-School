@@ -78,7 +78,6 @@ const StudentForm = ({
 
   const handleUpdate = async (values: StudentFormSchemaType) => {
     setIsLoading(true);
-    const name = extractOrJoinName([values.firstName, values.lastName]);
     try {
       if (data && data.userId) {
         const msg = await updateStudent(data?.userId, values);

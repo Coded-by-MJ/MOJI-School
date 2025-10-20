@@ -124,6 +124,7 @@ const sidebarOtherLinks: DashboardLink[] = [
     title: "Logout",
     url: "/",
     access: ["admin", "teacher", "student", "parent"],
+    isLogout: true,
   },
 ];
 export { sidebarMenuLinks, sidebarOtherLinks };

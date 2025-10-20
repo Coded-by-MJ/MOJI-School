@@ -7,7 +7,7 @@ import FormDialog from "@/components/forms/FormDialog";
 
 import AllowedUserCompClient from "@/components/auth/AllowedUserCompClient";
 import { fetchTeacherList } from "@/lib/query-actions";
-import { TeacherTableDataType, TableSearchParams } from "@/types";
+import { TeacherTableDataType, TableSearchParams, TeacherTableRelativeData } from "@/types";
 
 async function TeachersListPage({ searchParams }: PageProps<"/list/teachers">) {
   const queryParams = await searchParams;
@@ -18,7 +18,7 @@ async function TeachersListPage({ searchParams }: PageProps<"/list/teachers">) {
   };
   const { data, count, relativeData } = await fetchTeacherList<
     TeacherTableDataType[],
-    TeacherTableDataType
+    TeacherTableRelativeData
   >(filterParams);
   return (
     <section className="bg-muted gap-4 rounded-md  flex-col flex flex-1">

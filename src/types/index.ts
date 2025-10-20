@@ -23,6 +23,7 @@ export interface DashboardLink {
   icon: JSX.Element;
   title: string;
   url: Route;
+  isLogout?: boolean;
   access: UserRole[];
   items?: {
     title: string;
@@ -53,6 +54,7 @@ export type TableSearchParams = {
   search?: string;
   classId?: string;
   teacherId?: string;
+  studentId?: string;
 };
 
 export type RelativeAdminDataType = {
@@ -71,12 +73,25 @@ export type RelativeAdminDataType = {
 };
 
 export type TeacherTableDataType = Teacher & {
-  user: User;
-  subjects: Subject[];
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+    role: UserRole;
+  };
   classes: Class[];
+
+  subjects: Subject[];
 };
 export type StudentTableDataType = Student & {
-  user: User;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+    role: UserRole;
+  };
   grade: Grade;
   class: Class;
 };
@@ -263,7 +278,6 @@ export interface TeacherTableRelativeData {
     id: string;
 
     name: string;
-    capacity: number;
   }[];
 }
 export interface StudentTableRelativeData {

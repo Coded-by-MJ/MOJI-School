@@ -13,7 +13,6 @@ import { EventTableDataType, EventTableRelativeData } from "@/types";
 async function EventsListPage({ searchParams }: PageProps<"/list/events">) {
   const queryParams = await searchParams;
   const filterParams: TableSearchParams = {
-    classId: queryParams.classId?.toString(),
     page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
     search: queryParams.search?.toString(),
   };

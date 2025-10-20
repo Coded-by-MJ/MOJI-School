@@ -13,6 +13,7 @@ import { Button } from "../ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import FormSkeleton from "./FormSkeleton";
 import {
+  ActionState,
   AnnouncementTableDataType,
   AnnouncementTableRelativeData,
   AssignmentTableDataType,
@@ -37,10 +38,26 @@ import {
   TeacherTableDataType,
   TeacherTableRelativeData,
 } from "@/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import {
+  deleteAnnouncement,
+  deleteAssignment,
+  deleteAttendance,
+  deleteClass,
+  deleteEvent,
+  deleteExam,
+  deleteLesson,
+  deleteParent,
+  deleteResult,
+  deleteStudent,
+  deleteSubject,
+  deleteTeacher,
+} from "@/lib/mutation-actions";
+import { useFormState } from "react-dom";
+import { FormSubmitButton } from "./FormSubmitButton";
 
 const TeacherForm = dynamic(() => import("./TeacherForm"), {
   loading: () => <FormSkeleton />,
@@ -133,35 +150,24 @@ type RelativeDataMap = {
   event: EventTableRelativeData;
   announcement: AnnouncementTableRelativeData;
 };
+type DeleteActionFn = (
+  currentState: ActionState,
+  formData: FormData
+) => ActionState | Promise<ActionState>;
 
-// const deleteActionMap = {
-//   subject: deleteSubject,
-//   class: deleteClass,
-//   teacher: deleteTeacher,
-//   student: deleteStudent,
-//   exam: deleteExam,
-//   parent: deleteSubject,
-//   lesson: deleteSubject,
-//   assignment: deleteSubject,
-//   result: deleteSubject,
-//   attendance: deleteSubject,
-//   event: deleteSubject,
-//   announcement: deleteSubject,
-// };
-
-const deleteActionMap = {
-  subject: "subject",
-  class: "class",
-  teacher: "teacher",
-  student: "student",
-  exam: "exam",
-  parent: "parent",
-  lesson: "lesson",
-  assignment: "assignment",
-  result: "result",
-  attendance: "attendance",
-  event: "event",
-  announcement: "announcement",
+const deleteActionMap: Record<string, DeleteActionFn> = {
+  teacher: deleteTeacher,
+  student: deleteStudent,
+  parent: deleteParent,
+  subject: deleteSubject,
+  class: deleteClass,
+  exam: deleteExam,
+  lesson: deleteLesson,
+  assignment: deleteAssignment,
+  result: deleteResult,
+  attendance: deleteAttendance,
+  event: deleteEvent,
+  announcement: deleteAnnouncement,
 };
 
 type FormDialogProps<T extends keyof FormDataMap> = {
@@ -251,13 +257,28 @@ const forms: {
     />
   ),
   attendance: ({ type, data, onClose, relativeData }) => (
-    <AttendanceForm type={type} data={data} relativeData={relativeData} onClose={onClose} />
+    <AttendanceForm
+      type={type}
+      data={data}
+      relativeData={relativeData}
+      onClose={onClose}
+    />
   ),
   event: ({ type, data, onClose, relativeData }) => (
-    <EventForm type={type} data={data} relativeData={relativeData} onClose={onClose} />
+    <EventForm
+      type={type}
+      data={data}
+      relativeData={relativeData}
+      onClose={onClose}
+    />
   ),
   announcement: ({ type, data, onClose, relativeData }) => (
-    <AnnouncementForm type={type} data={data} relativeData={relativeData} onClose={onClose} />
+    <AnnouncementForm
+      type={type}
+      data={data}
+      relativeData={relativeData}
+      onClose={onClose}
+    />
   ),
 };
 
@@ -281,66 +302,33 @@ function FormDialog<T extends keyof FormDataMap>({
   userId,
 }: FormDialogProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
-  const router = useRouter();
 
   const onClose = () => {
     setIsOpen(false);
   };
 
-  const handleUserDelete = async (userIdInput: string) => {
-    await authClient.admin.removeUser(
-      {
-        userId: userIdInput, // required
-      },
-      {
-        onRequest: () => {
-          setIsDeleteLoading(true);
-        },
-        onSuccess: async () => {
-          setIsDeleteLoading(false);
-          onClose();
-
-          toast.success("User deleted successfully.");
-          router.refresh();
-        },
-        onError: (ctx) => {
-          setIsDeleteLoading(false);
-          console.log(ctx);
-          toast.error(
-            ctx.error.message ?? "Something went wrong, try again later."
-          );
-        },
-      }
-    );
-  };
-
   const Form = () => {
-    if (type === "delete" && userId && id)
-      return (
-        <div className="p-4 flex flex-col gap-4">
-          <span className="text-center font-medium">
-            All associated data may be lost. Are you sure you want to delete
-            this {table}?
-          </span>
-          <Button
-            disabled={isDeleteLoading}
-            onClick={() => handleUserDelete(userId)}
-            className="bg-red-700 text-white py-2 px-4 rounded-md w-max self-center"
-          >
-            {isDeleteLoading ? "Deleting..." : "Delete"}
-          </Button>
-        </div>
-      );
+    const [state, formAction] = useFormState<ActionState, FormData>(
+      deleteActionMap[table],
+      { message: "", type: "success" }
+    );
+
+    useEffect(() => {
+      if (state && state.message.length > 0) {
+        toast[state.type](state.message);
+        onClose();
+      }
+    }, [state]);
+
     if (type === "delete" && id) {
       return (
-        <form action="" className="p-4 flex flex-col gap-4">
+        <form action={formAction} className="p-4 flex flex-col gap-4">
+          <input type="text" name="id" value={id} hidden />
+          <input type="text" name="userId" value={userId} hidden />
           <span className="text-center font-medium">
             All data will be lost. Are you sure you want to delete this {table}?
           </span>
-          <Button className="bg-red-700 text-white py-2 px-4 rounded-md w-max self-center">
-            Delete
-          </Button>
+          <FormSubmitButton />
         </form>
       );
     }

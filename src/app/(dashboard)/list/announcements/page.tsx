@@ -21,7 +21,6 @@ async function AnnouncementsListPage({
 }: PageProps<"/list/announcements">) {
   const queryParams = await searchParams;
   const filterParams: TableSearchParams = {
-    classId: queryParams.classId?.toString(),
     page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
     search: queryParams.search?.toString(),
   };
