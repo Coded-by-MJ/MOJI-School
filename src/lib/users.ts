@@ -5,6 +5,8 @@ import { auth } from "./auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Route } from "next";
+import { revalidatePath } from "next/cache";
+import prisma from "./prisma";
 
 const renderError = (error: unknown) => {
   if (error instanceof Error) {
@@ -56,4 +58,38 @@ export const isUserAllowed = async (allowedUsers: UserRole[]) => {
     redirect(`/${adminUser.role}` as Route);
   }
   return adminUser;
+};
+
+export const updateUserProfile = async (
+  prevState: any,
+  formData: FormData
+): Promise<ActionState> => {
+  const user = await getAuthUser();
+  const rawData = Object.fromEntries(formData);
+  try {
+    const validatedFields = {
+      firstName: String(rawData.firstName).trim(),
+      lastName: String(rawData.lastName).trim(),
+    };
+
+    if (validatedFields.firstName.length === 0) {
+      throw new Error("First name is required");
+    }
+    if (validatedFields.lastName.length === 0) {
+      throw new Error("Last name is required");
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name: `${validatedFields.firstName} ${validatedFields.lastName}`,
+      },
+    });
+
+    revalidatePath("/profile");
+    revalidatePath(`/`, "layout");
+    return { message: "Profile updated successfully", type: "success" };
+  } catch (error) {
+    return renderError(error);
+  }
 };

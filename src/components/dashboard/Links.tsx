@@ -113,12 +113,12 @@ const sidebarOtherLinks: DashboardLink[] = [
     url: "/profile",
     access: ["admin", "teacher", "student", "parent"],
   },
-  {
-    icon: <Settings strokeWidth={1.5} />,
-    title: "Settings",
-    url: "/settings",
-    access: ["admin", "teacher", "student", "parent"],
-  },
+  // {
+  //   icon: <Settings strokeWidth={1.5} />,
+  //   title: "Settings",
+  //   url: "/settings",
+  //   access: ["admin", "teacher", "student", "parent"],
+  // },
   {
     icon: <LogOut strokeWidth={1.5} />,
     title: "Logout",

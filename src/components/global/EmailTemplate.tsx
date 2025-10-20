@@ -147,13 +147,12 @@ export const WelcomeAccountEmailTemplate = ({
 
       <div
         style={{
-          backgroundColor: "#1a1a1a",
           padding: "16px",
           borderRadius: "8px",
           marginBottom: "24px",
         }}
       >
-        <p style={{ margin: 0 }}>
+        <p style={{ marginBottom: "12px" }}>
           <strong>Email:</strong> {email}
         </p>
         <p style={{ margin: 0 }}>

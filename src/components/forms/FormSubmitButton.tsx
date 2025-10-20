@@ -18,3 +18,13 @@ export function FormSubmitButton() {
     </Button>
   );
 }
+
+export function ProfileFormSubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button className="h-12 bg-primary text-secondary w-full">
+      <span>{pending ? "Updating..." : "Update"}</span>
+    </Button>
+  );
+}
