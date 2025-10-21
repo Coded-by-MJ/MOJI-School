@@ -30,8 +30,7 @@ export const sendResetPasswordEmailAction = async ({
 }) => {
   try {
     const { error } = await resend.emails.send({
-      from: `MOJI SCHOOL <${fromEmail}>`,
-
+      from: `MOJI SCHOOL <${fromEmail}>`
       to: email,
       react: ResetPasswordEmailTemplate({
         name: firstName,
@@ -62,8 +61,7 @@ export const sendAccountDetailsEmailAction = async ({
 }) => {
   try {
     const { error } = await resend.emails.send({
-      // from: `MOJI SCHOOL <${fromEmail}>`,
-      from: "onboarding@resend.dev",
+      from: `MOJI SCHOOL <${fromEmail}>`,
       to: email,
       subject: "Welcome to MOJI School — Your Account Details",
 
