@@ -19,7 +19,6 @@ import prisma from "./prisma";
 import { revalidatePath } from "next/cache";
 import {
   extractOrJoinName,
-  getDefaultImage,
   getDefaultPassword,
 } from "@/utils/funcs";
 import { auth } from "./auth";
@@ -27,11 +26,11 @@ import { headers } from "next/headers";
 import { isUserAllowed } from "./users";
 
 const renderError = (error: unknown): ActionState => {
-  console.log(error);
+  console.error(error);
   if (error instanceof Error) {
-    console.log(error.message);
+    console.error(error.message);
   } else {
-    console.log("unknown error occurred");
+    console.error("unknown error occurred");
   }
   return {
     message: error instanceof Error ? error.message : "An error occurred",
