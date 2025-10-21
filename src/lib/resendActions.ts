@@ -8,11 +8,11 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const fromEmail = process.env.NEXT_PUBLIC_FROM_EMAIL;
 
 const renderError = (error: unknown) => {
-  console.log(error);
+  console.error(error);
   if (error instanceof Error) {
-    console.log(error.message);
+    console.error(error.message);
   } else {
-    console.log("unknown error occurred");
+    console.error("unknown error occurred");
   }
   return {
     message: error instanceof Error ? error.message : "An error occurred",
@@ -31,7 +31,6 @@ export const sendResetPasswordEmailAction = async ({
   try {
     const { error } = await resend.emails.send({
       from: `MOJI SCHOOL <${fromEmail}>`,
-
       to: email,
       react: ResetPasswordEmailTemplate({
         name: firstName,
@@ -62,8 +61,7 @@ export const sendAccountDetailsEmailAction = async ({
 }) => {
   try {
     const { error } = await resend.emails.send({
-      // from: `MOJI SCHOOL <${fromEmail}>`,
-      from: "onboarding@resend.dev",
+      from: `MOJI SCHOOL <${fromEmail}>`,
       to: email,
       subject: "Welcome to MOJI School — Your Account Details",
 

@@ -10,10 +10,11 @@ import prisma from "./prisma";
 import { ActionState } from "@/types";
 
 const renderError = (error: unknown): ActionState => {
+  console.error(error);
   if (error instanceof Error) {
-    console.log(error.message);
+    console.error(error.message);
   } else {
-    console.log("unknown error occurred");
+    console.error("unknown error occurred");
   }
   return {
     message: error instanceof Error ? error.message : "An error occurred",
