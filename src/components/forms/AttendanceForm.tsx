@@ -23,14 +23,13 @@ import {
   attendanceFormSchema,
   AttendanceFormSchemaType,
 } from "@/types/zod-schemas";
-import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
-import { useState } from "react";
 import { format, parseISO } from "date-fns";
 
 import { AttendanceTableDataType, AttendanceTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
-import { createAttendance, updateAttendance } from "@/lib/mutation-actions";
+import { attendancesMutations } from "@/queries/attendances";
+import { useMutation } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
 
 const AttendanceForm = ({
@@ -44,8 +43,6 @@ const AttendanceForm = ({
   relativeData?: AttendanceTableRelativeData;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const lessons = relativeData?.lessons || [];
   const students = relativeData?.students || [];
 
@@ -60,41 +57,51 @@ const AttendanceForm = ({
     },
   });
 
-  const handleCreate = async (values: AttendanceFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: attendancesMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["attendances"] });
+    },
+  });
 
-    try {
-      const msg = await createAttendance(values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: AttendanceFormSchemaType) => {
-    setIsLoading(true);
-
-    try {
-      const msg = await updateAttendance(data?.id!, values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: attendancesMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["attendances"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["attendance", variables.id],
+      });
+    },
+  });
 
   const onSubmit = (values: AttendanceFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data?.id) {
+        updateMutation.mutate(
+          { id: data.id, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

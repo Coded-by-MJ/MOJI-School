@@ -20,7 +20,7 @@ const roleRoutes: Record<string, string> = {
   parent: "/parent",
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -75,6 +75,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  runtime: "nodejs",
   matcher: ["/((?!_next|api|static|favicon.ico).*)", "/"], // protect all pages except public
 };

@@ -1,5 +1,6 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { TableSearchParams, AssignmentTableDataType, AssignmentTableRelativeData, ActionState, UserRole } from "@/types";
+import { TableSearchParams, AssignmentTableDataType, AssignmentTableRelativeData, ActionState } from "@/types";
+import { UserRole } from "@/generated/prisma";
 import { AssignmentFormSchemaType } from "@/types/zod-schemas";
 
 export type AssignmentListResponse = {

@@ -129,7 +129,6 @@ model Teacher {
   userId    String    @unique
   phone     String?   @unique
   address   String
-  img       String?
   bloodType String
   sex       UserSex
   birthday  DateTime

@@ -43,7 +43,7 @@ const TeacherForm = ({
     data && data.subjects ? data?.subjects.map((s) => s.id) : [];
   const subjects = relativeData?.subjects || [];
 
-  const form = useForm<TeacherFormSchemaType>({
+  const form = useForm({
     resolver: zodResolver(teacherFormSchema),
     mode: "onChange",
     defaultValues: {
@@ -70,9 +70,16 @@ const TeacherForm = ({
     mutationFn: teachersMutations.update,
     onSettled: (_, __, variables, ___, mutationContext) => {
       mutationContext.client.invalidateQueries({ queryKey: ["teachers"] });
-      mutationContext.client.invalidateQueries({
-        queryKey: ["teacher", variables.userId],
-      });
+      // Use teacher's id (not userId) for query key since the page uses teacherId
+      // The route /list/teachers/[teacherId] uses teacher.id, not user.id
+      if (data?.id) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher", data.id],
+        });
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher-schedule", data.id],
+        });
+      }
     },
   });
 
@@ -197,10 +204,14 @@ const TeacherForm = ({
                     type="date"
                     value={
                       field.value
-                        ? field.value.toISOString().split("T")[0]
+                        ? (field.value as Date).toISOString().split("T")[0]
                         : undefined
                     }
-                    onChange={(e) => field.onChange(new Date(e.target.value))}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value ? new Date(e.target.value) : undefined
+                      )
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -319,9 +330,13 @@ const TeacherForm = ({
                       accept="image/*"
                       hidden
                       className="invisible"
-                      onChange={(e) =>
-                        field.onChange(e.target.files?.[0] ?? null)
-                      }
+                      onChange={(e) => {
+                        const file =
+                          e.target.files && e.target.files.length > 0
+                            ? e.target.files[0]
+                            : null;
+                        field.onChange(file);
+                      }}
                     />
                   </div>
                 </FormControl>

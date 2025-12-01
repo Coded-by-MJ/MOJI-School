@@ -11,7 +11,7 @@ import {
 import { Button } from "../ui/button";
 
 import { Plus, Edit, Trash2 } from "lucide-react";
-import FormSkeleton from "./FormSkeleton";
+import { FormSkeleton } from "@/components/global/SkeletonsLoading";
 import {
   ActionState,
   AnnouncementTableDataType,
@@ -319,6 +319,37 @@ function FormDialog<T extends keyof FormDataMap>({
           mutationContext.client.invalidateQueries({
             queryKey: [table, deleteId],
           });
+          // Invalidate related queries
+          if (table === "teacher") {
+            mutationContext.client.invalidateQueries({
+              queryKey: ["teacher-schedule", deleteId],
+            });
+          } else if (table === "student") {
+            mutationContext.client.invalidateQueries({
+              queryKey: ["student-class", deleteId],
+            });
+            // Note: parent-students invalidation would require parentId which we don't have here
+            // The parent's students list will be refreshed when they navigate to their page
+          } else if (table === "parent") {
+            mutationContext.client.invalidateQueries({
+              queryKey: ["parent-students", deleteId],
+            });
+          }
+        }
+      } else if (table === "lesson") {
+        // Invalidate all teacher and class schedules since we don't have specific IDs
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher-schedule"],
+        });
+        mutationContext.client.invalidateQueries({
+          queryKey: ["class-schedule"],
+        });
+      } else if (table === "class") {
+        const deleteId = variables?.id;
+        if (deleteId) {
+          mutationContext.client.invalidateQueries({
+            queryKey: ["class-schedule", deleteId],
+          });
         }
       }
     },
@@ -384,7 +415,7 @@ function FormDialog<T extends keyof FormDataMap>({
           {renderIcon(type)}
         </Button>
       </DialogTrigger>
-      <DialogContent className="md:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="capitalize">
             {type} {table}

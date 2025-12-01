@@ -7,6 +7,8 @@ import { extractOrJoinName, getDefaultPassword } from "@/utils/funcs";
 import { studentFormSchema, validateWithZodSchema } from "@/types/zod-schemas";
 import { TableSearchParams } from "@/types";
 import { Prisma } from "@/generated/prisma";
+import { uploadImage } from "@/lib/supabase";
+import { parseFormDataForRoute } from "@/lib/form-data-helpers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,40 +45,39 @@ export async function GET(request: NextRequest) {
         : {}),
     };
 
-    const [students, count, grades, classes, parents] =
-      await prisma.$transaction([
-        prisma.student.findMany({
-          where: whereClause,
-          include: {
-            user: true,
-            class: true,
-            grade: true,
-          },
-          orderBy: {
-            updatedAt: "desc",
-          },
-        }),
-        prisma.student.count({ where: whereClause }),
-        prisma.grade.findMany(),
-        prisma.class.findMany({
-          select: {
-            id: true,
-            name: true,
-            capacity: true,
-            _count: { select: { students: true } },
-          },
-        }),
-        prisma.parent.findMany({
-          select: {
-            id: true,
-            user: {
-              select: {
-                name: true,
-              },
+    const [students, count, grades, classes, parents] = await Promise.all([
+      prisma.student.findMany({
+        where: whereClause,
+        include: {
+          user: true,
+          class: true,
+          grade: true,
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      }),
+      prisma.student.count({ where: whereClause }),
+      prisma.grade.findMany(),
+      prisma.class.findMany({
+        select: {
+          id: true,
+          name: true,
+          capacity: true,
+          _count: { select: { students: true } },
+        },
+      }),
+      prisma.parent.findMany({
+        select: {
+          id: true,
+          user: {
+            select: {
+              name: true,
             },
           },
-        }),
-      ]);
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       data: students,
@@ -100,11 +101,12 @@ export async function POST(request: NextRequest) {
   try {
     await isUserAllowed(["admin"]);
 
-    const rawBody = await request.json();
+    const formData = await request.formData();
+    const { rawBody } = await parseFormDataForRoute(formData);
     const body = validateWithZodSchema(studentFormSchema, rawBody);
     const name = extractOrJoinName([body.firstName, body.lastName]);
 
-    const [existingStudent, classItem] = await prisma.$transaction([
+    const [existingStudent, classItem] = await Promise.all([
       prisma.student.findUnique({
         where: { phone: body.phone },
       }),
@@ -129,8 +131,14 @@ export async function POST(request: NextRequest) {
     }
 
     let userId: string | undefined;
+    let imageUrl: string | undefined;
 
     try {
+      // Upload image if provided
+      if (body.img instanceof File) {
+        imageUrl = await uploadImage(body.img);
+      }
+
       const { user } = await auth.api.createUser({
         body: {
           name,
@@ -143,19 +151,25 @@ export async function POST(request: NextRequest) {
 
       userId = user.id;
 
-      await prisma.student.create({
-        data: {
-          userId: user.id,
-          address: body.address,
-          phone: body.phone,
-          birthday: body.birthday,
-          sex: body.sex,
-          bloodType: body.bloodType,
-          parentId: body.parentId,
-          classId: body.classId,
-          gradeId: body.gradeId,
-        },
-      });
+      await prisma.$transaction([
+        prisma.student.create({
+          data: {
+            userId: user.id,
+            address: body.address,
+            phone: body.phone,
+            birthday: body.birthday,
+            sex: body.sex,
+            bloodType: body.bloodType,
+            parentId: body.parentId,
+            classId: body.classId,
+            gradeId: body.gradeId,
+          },
+        }),
+        prisma.user.update({
+          where: { id: user.id },
+          data: { ...(imageUrl && { image: imageUrl }) },
+        }),
+      ]);
 
       return NextResponse.json({
         message: "Student created successfully.",

@@ -1,5 +1,6 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { TableSearchParams, EventTableDataType, EventTableRelativeData, ActionState, UserRole } from "@/types";
+import { TableSearchParams, EventTableDataType, EventTableRelativeData, ActionState } from "@/types";
+import { UserRole } from "@/generated/prisma";
 import { EventFormSchemaType } from "@/types/zod-schemas";
 
 export type EventListResponse = {

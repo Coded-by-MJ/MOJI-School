@@ -20,14 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { eventFormSchema, EventFormSchemaType } from "@/types/zod-schemas";
-import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
-import { useState } from "react";
 import { format, parseISO } from "date-fns";
 
 import { EventTableDataType, EventTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
-import { createEvent, updateEvent } from "@/lib/mutation-actions";
+import { eventsMutations } from "@/queries/events";
+import { useMutation } from "@tanstack/react-query";
 
 const EventForm = ({
   type,
@@ -40,8 +39,6 @@ const EventForm = ({
   relativeData?: EventTableRelativeData;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const classes = relativeData?.classes || [];
 
   const form = useForm({
@@ -60,41 +57,51 @@ const EventForm = ({
     },
   });
 
-  const handleCreate = async (values: EventFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: eventsMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
 
-    try {
-      const msg = await createEvent(values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: EventFormSchemaType) => {
-    setIsLoading(true);
-
-    try {
-      const msg = await updateEvent(data?.id!, values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: eventsMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["events"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["event", variables.id],
+      });
+    },
+  });
 
   const onSubmit = (values: EventFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data?.id) {
+        updateMutation.mutate(
+          { id: data.id, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

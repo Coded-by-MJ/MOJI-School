@@ -23,14 +23,13 @@ import {
   assignmentFormSchema,
   AssignmentFormSchemaType,
 } from "@/types/zod-schemas";
-import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
-import { useState } from "react";
 import { format, parseISO } from "date-fns";
 
 import { AssignmentTableDataType, AssignmentTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
-import { createAssignment, updateAssignment } from "@/lib/mutation-actions";
+import { assignmentsMutations } from "@/queries/assignments";
+import { useMutation } from "@tanstack/react-query";
 
 const AssignmentForm = ({
   type,
@@ -43,8 +42,6 @@ const AssignmentForm = ({
   relativeData?: AssignmentTableRelativeData;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const lessons = relativeData?.lessons || [];
 
   const form = useForm({
@@ -62,41 +59,51 @@ const AssignmentForm = ({
     },
   });
 
-  const handleCreate = async (values: AssignmentFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: assignmentsMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
 
-    try {
-      const msg = await createAssignment(values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: AssignmentFormSchemaType) => {
-    setIsLoading(true);
-
-    try {
-      const msg = await updateAssignment(data?.id!, values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: assignmentsMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["assignments"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["assignment", variables.id],
+      });
+    },
+  });
 
   const onSubmit = (values: AssignmentFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data?.id) {
+        updateMutation.mutate(
+          { id: data.id, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

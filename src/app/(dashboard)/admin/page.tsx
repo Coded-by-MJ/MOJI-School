@@ -5,18 +5,17 @@ import UserCard from "@/components/global/UserCard";
 import EventCalendar from "@/components/global/EventCalendar";
 import Announcements from "@/components/global/Announcements";
 import { isUserAllowed } from "@/lib/users";
-import {
-  fetchAnnouncementData,
-  fetchAttendanceChartData,
-  fetchEventsData,
-  fetchStudentsChartData,
-  fetchUserRoleData,
-} from "@/lib/query-actions";
+import { dashboardService } from "@/services/dashboard";
+import { eventsService } from "@/services/events";
+import { announcementsService } from "@/services/announcements";
+import { cookies as getCookies } from "next/headers";
 
 async function AdminPage({ searchParams }: PageProps<"/admin">) {
   await isUserAllowed(["admin"]);
   const queryParams = await searchParams;
   const eventsDate = queryParams.date ? queryParams.date.toString() : undefined;
+
+  const cookiesString = (await getCookies()).toString();
 
   const [
     usersData,
@@ -25,11 +24,11 @@ async function AdminPage({ searchParams }: PageProps<"/admin">) {
     eventsData,
     announcementData,
   ] = await Promise.all([
-    fetchUserRoleData(),
-    fetchStudentsChartData(),
-    fetchAttendanceChartData(),
-    fetchEventsData(eventsDate),
-    fetchAnnouncementData(),
+    dashboardService.getUserRolesChart(cookiesString),
+    dashboardService.getStudentsChart(cookiesString),
+    dashboardService.getAttendanceChart(cookiesString),
+    eventsService.getByDate(eventsDate, cookiesString),
+    announcementsService.getRecent(cookiesString),
   ]);
   return (
     <section className="flex gap-4 flex-col lg:flex-row">

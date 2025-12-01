@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = await isUserAllowed(["admin"]);
     
-    const [gradesWithClasses, parents] = await prisma.$transaction([
+    const [gradesWithClasses, parents] = await Promise.all([
       prisma.grade.findMany({
         include: {
           classes: {

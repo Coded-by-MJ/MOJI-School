@@ -2,20 +2,20 @@ import EventCalendar from "@/components/global/EventCalendar";
 import Announcements from "@/components/global/Announcements";
 import ClassSchedule from "@/components/global/ClassSchedule";
 import { isUserAllowed } from "@/lib/users";
-import {
-  fetchAnnouncementData,
-  fetchEventsData,
-  fetchStudentClass,
-} from "@/lib/query-actions";
+import { studentsService } from "@/services/students";
+import { eventsService } from "@/services/events";
+import { announcementsService } from "@/services/announcements";
+import { cookies as getCookies } from "next/headers";
 
 async function StudentPage({ searchParams }: PageProps<"/student">) {
   const queryParams = await searchParams;
   const eventsDate = queryParams.date ? queryParams.date.toString() : undefined;
   const { id } = await isUserAllowed(["student"]);
+  const cookiesString = (await getCookies()).toString();
   const [classItem, eventsData, announcementData] = await Promise.all([
-    fetchStudentClass(id),
-    fetchEventsData(eventsDate),
-    fetchAnnouncementData(),
+    studentsService.getClass(id, cookiesString),
+    eventsService.getByDate(eventsDate, cookiesString),
+    announcementsService.getRecent(cookiesString),
   ]);
   return (
     <section className="flex flex-1 gap-4 flex-col xl:flex-row">

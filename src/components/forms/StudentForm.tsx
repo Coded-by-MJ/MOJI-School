@@ -43,7 +43,7 @@ const StudentForm = ({
   const parents = relativeData?.parents || [];
   const classes = relativeData?.classes || [];
 
-  const form = useForm<StudentFormSchemaType>({
+  const form = useForm({
     resolver: zodResolver(studentFormSchema),
     mode: "onChange",
     defaultValues: {
@@ -55,13 +55,28 @@ const StudentForm = ({
       bloodType: data?.bloodType,
       birthday: data?.birthday ? new Date(data?.birthday) : undefined,
       sex: data?.sex || "MALE",
+      parentId: data?.parentId || "",
+      classId: data?.classId || "",
+      gradeId: data?.gradeId || "",
     },
   });
 
   const createMutation = useMutation({
     mutationFn: studentsMutations.create,
-    onSettled: (_, __, ___, ____, mutationContext) => {
+    onSettled: (_, __, variables, ____, mutationContext) => {
       mutationContext.client.invalidateQueries({ queryKey: ["students"] });
+      // Invalidate parent's students list if parentId exists
+      if (variables.parentId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["parent-students", variables.parentId],
+        });
+      }
+      // Invalidate class schedule if classId exists
+      if (variables.classId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["class-schedule", variables.classId],
+        });
+      }
     },
   });
 
@@ -69,9 +84,41 @@ const StudentForm = ({
     mutationFn: studentsMutations.update,
     onSettled: (_, __, variables, ____, mutationContext) => {
       mutationContext.client.invalidateQueries({ queryKey: ["students"] });
-      mutationContext.client.invalidateQueries({
-        queryKey: ["student", variables.userId],
-      });
+      // Use student's id (not userId) for query key since the page uses studentId
+      // The route /list/students/[studentId] uses student.id, not user.id
+      if (data?.id) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["student", data.id],
+        });
+        mutationContext.client.invalidateQueries({
+          queryKey: ["student-class", data.id],
+        });
+      }
+      // Invalidate parent's students list - check both old and new parentId
+      if (data?.parentId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["parent-students", data.parentId],
+        });
+      }
+      if (
+        variables.data.parentId &&
+        variables.data.parentId !== data?.parentId
+      ) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["parent-students", variables.data.parentId],
+        });
+      }
+      // Invalidate class schedules if classId changed
+      if (data?.classId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["class-schedule", data.classId],
+        });
+      }
+      if (variables.data.classId && variables.data.classId !== data?.classId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["class-schedule", variables.data.classId],
+        });
+      }
     },
   });
 
@@ -196,10 +243,10 @@ const StudentForm = ({
                     type="date"
                     value={
                       field.value
-                        ? field.value.toISOString().split("T")[0]
+                        ? (field.value as Date).toISOString().split("T")[0]
                         : undefined
                     }
-                    onChange={(e) => field.onChange(new Date(e.target.value))}
+                    onChange={(e) => field.onChange( e.target.value ? new Date(e.target.value) : undefined)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -348,9 +395,13 @@ const StudentForm = ({
                       accept="image/*"
                       hidden
                       className="invisible"
-                      onChange={(e) =>
-                        field.onChange(e.target.files?.[0] ?? null)
-                      }
+                      onChange={(e) => {
+                        const file =
+                          e.target.files && e.target.files.length > 0
+                            ? e.target.files[0]
+                            : null;
+                        field.onChange(file);
+                      }}
                     />
                   </div>
                 </FormControl>

@@ -20,14 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { examFormSchema, ExamFormSchemaType } from "@/types/zod-schemas";
-import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
-import { useState } from "react";
 import { format, parseISO } from "date-fns";
 
 import { ExamTableDataType, ExamTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
-import { createExam, updateExam } from "@/lib/mutation-actions";
+import { examsMutations } from "@/queries/exams";
+import { useMutation } from "@tanstack/react-query";
 
 const ExamForm = ({
   type,
@@ -40,8 +39,6 @@ const ExamForm = ({
   relativeData?: ExamTableRelativeData;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const lessons = relativeData?.lessons || [];
 
   const form = useForm({
@@ -59,41 +56,51 @@ const ExamForm = ({
     },
   });
 
-  const handleCreate = async (values: ExamFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: examsMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["exams"] });
+    },
+  });
 
-    try {
-      const msg = await createExam(values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: ExamFormSchemaType) => {
-    setIsLoading(true);
-
-    try {
-      const msg = await updateExam(data?.id!, values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: examsMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["exams"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["exam", variables.id],
+      });
+    },
+  });
 
   const onSubmit = (values: ExamFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data?.id) {
+        updateMutation.mutate(
+          { id: data.id, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

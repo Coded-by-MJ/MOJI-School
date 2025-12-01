@@ -2,7 +2,7 @@ import { getQueryClient, getCookiesString } from "@/lib/query-client-helpers";
 import { teachersQueries } from "@/queries/teachers";
 import { TableSearchParams } from "@/types";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import TeachersListClient from "./TeachersListClient";
+import TeachersListClient from "@/components/global/TeachersListClient";
 
 async function TeachersListPage({ searchParams }: PageProps<"/list/teachers">) {
   const queryParams = await searchParams;

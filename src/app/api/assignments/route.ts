@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    const [assignments, count, lessons] = await prisma.$transaction([
+    const [assignments, count, lessons] = await Promise.all([
       prisma.assignment.findMany({
         where: whereClause,
         include: {

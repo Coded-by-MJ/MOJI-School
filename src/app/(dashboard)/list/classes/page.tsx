@@ -2,7 +2,7 @@ import { getQueryClient, getCookiesString } from "@/lib/query-client-helpers";
 import { classesQueries } from "@/queries/classes";
 import { TableSearchParams } from "@/types";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import ClassesListClient from "./ClassesListClient";
+import ClassesListClient from "@/components/global/ClassesListClient";
 
 async function ClassesListPage({ searchParams }: PageProps<"/list/classes">) {
   const queryParams = await searchParams;

@@ -20,14 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { lessonFormSchema, LessonFormSchemaType } from "@/types/zod-schemas";
-import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
-import { useState } from "react";
 import { format, parseISO } from "date-fns";
 
 import { LessonTableDataType, LessonTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
-import { createLesson, updateLesson } from "@/lib/mutation-actions";
+import { lessonsMutations } from "@/queries/lessons";
+import { useMutation } from "@tanstack/react-query";
 
 const LessonForm = ({
   type,
@@ -40,8 +39,6 @@ const LessonForm = ({
   relativeData?: LessonTableRelativeData;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const teachers = relativeData?.teachers || [];
   const classes = relativeData?.classes || [];
   const subjects = relativeData?.subjects || [];
@@ -64,41 +61,80 @@ const LessonForm = ({
     },
   });
 
-  const handleCreate = async (values: LessonFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: lessonsMutations.create,
+    onSettled: (_, __, variables, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["lessons"] });
+      // Invalidate schedules when lesson is created
+      if (variables.teacherId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher-schedule", variables.teacherId],
+        });
+      }
+      if (variables.classId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["class-schedule", variables.classId],
+        });
+      }
+    },
+  });
 
-    try {
-      const msg = await createLesson(values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: LessonFormSchemaType) => {
-    setIsLoading(true);
-
-    try {
-      const msg = await updateLesson(data?.id!, values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: lessonsMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["lessons"] });
+      // Invalidate schedules - check both old and new teacherId/classId
+      if (data?.teacherId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher-schedule", data.teacherId],
+        });
+      }
+      if (variables.data.teacherId && variables.data.teacherId !== data?.teacherId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher-schedule", variables.data.teacherId],
+        });
+      }
+      if (data?.classId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["class-schedule", data.classId],
+        });
+      }
+      if (variables.data.classId && variables.data.classId !== data?.classId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["class-schedule", variables.data.classId],
+        });
+      }
+    },
+  });
 
   const onSubmit = (values: LessonFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data?.id) {
+        updateMutation.mutate(
+          { id: data.id, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

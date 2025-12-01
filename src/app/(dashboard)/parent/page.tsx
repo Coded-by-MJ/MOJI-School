@@ -1,16 +1,16 @@
 import Announcements from "@/components/global/Announcements";
 import ClassSchedule from "@/components/global/ClassSchedule";
-import {
-  fetchAnnouncementData,
-  fetchParentStudents,
-} from "@/lib/query-actions";
+import { parentsService } from "@/services/parents";
+import { announcementsService } from "@/services/announcements";
 import { isUserAllowed } from "@/lib/users";
+import { cookies as getCookies } from "next/headers";
 
 async function ParentPage() {
   const { id } = await isUserAllowed(["parent"]);
+  const cookiesString = (await getCookies()).toString();
   const [students, announcementData] = await Promise.all([
-    fetchParentStudents(id),
-    fetchAnnouncementData(),
+    parentsService.getStudents(id, cookiesString),
+    announcementsService.getRecent(cookiesString),
   ]);
   return (
     <section className="flex  flex-1 gap-4 flex-col xl:flex-row">

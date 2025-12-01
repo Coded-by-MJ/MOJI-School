@@ -37,7 +37,6 @@ export const resetPasswordSchema = z
 
 export const forgotPasswordSchema = z.object({
   email: z
-    .string()
     .email({ message: "Invalid email address" })
     .min(1, { message: "Email is required" }),
 });
@@ -51,7 +50,7 @@ export const teacherFormSchema = z.object({
   bloodType: z
     .string()
     .regex(/^(A|B|AB|O)[+-]$/, { message: "Invalid blood type!" }),
-  birthday: z.date({ message: "Birthday is required!" }),
+  birthday: z.coerce.date({ message: "Birthday is required!" }),
   sex: z.enum(["MALE", "FEMALE"], { message: "Sex is required!" }),
   img: validateImageFile().optional(),
   subjects: z.array(z.string()),
@@ -73,7 +72,7 @@ export const studentFormSchema = z.object({
   bloodType: z
     .string()
     .regex(/^(A|B|AB|O)[+-]$/, { message: "Invalid blood type!" }),
-  birthday: z.date({ message: "Birthday is required!" }),
+  birthday: z.coerce.date({ message: "Birthday is required!" }),
   sex: z.enum(["MALE", "FEMALE"], { message: "Sex is required!" }),
   img: validateImageFile().optional(),
   parentId: z.string().min(1, { message: "Parent ID is required!" }),
@@ -279,11 +278,10 @@ function validateImageFile() {
   return z
     .instanceof(File)
     .refine((file) => {
-      if (!file) return "Image is required!";
-      return file && file.size <= maxUploadSize;
+      return file.size <= maxUploadSize;
     }, `Image size must be less than 2 MB`)
     .refine((file) => {
-      return file && !acceptedFileTypes.includes(file.type);
+      return acceptedFileTypes.includes(file.type);
     }, "Image must be a valid image type (JPEG, PNG, WebP, GIF, JPG)");
 }
 
@@ -300,6 +298,12 @@ export function validateWithZodSchema<T>(
   return result.data;
 }
 
+export const profileFormSchema = z.object({
+  firstName: z.string().trim().min(1, { message: "First name is required" }),
+  lastName: z.string().trim().min(1, { message: "Last name is required" }),
+  img: validateImageFile().optional(),
+});
+
 export type SignUpSchemaType = z.infer<typeof signUpSchema>;
 export type SignInSchemaType = z.infer<typeof signInSchema>;
 export type ResetPasswordSchemaType = z.infer<typeof resetPasswordSchema>;
@@ -307,6 +311,7 @@ export type ForgotPasswordSchemaType = z.infer<typeof forgotPasswordSchema>;
 export type StudentFormSchemaType = z.infer<typeof studentFormSchema>;
 export type TeacherFormSchemaType = z.infer<typeof teacherFormSchema>;
 export type ParentFormSchemaType = z.infer<typeof parentFormSchema>;
+export type ProfileFormSchemaType = z.infer<typeof profileFormSchema>;
 export type LessonFormSchemaType = z.infer<typeof lessonFormSchema>;
 export type GradeFormSchemaType = z.infer<typeof gradeFormSchema>;
 export type ClassFormSchemaType = z.infer<typeof classFormSchema>;

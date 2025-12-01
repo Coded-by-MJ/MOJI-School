@@ -1,5 +1,6 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { TableSearchParams, AnnouncementTableDataType, AnnouncementTableRelativeData, ActionState, UserRole } from "@/types";
+import { TableSearchParams, AnnouncementTableDataType, AnnouncementTableRelativeData, ActionState } from "@/types";
+import { UserRole } from "@/generated/prisma";
 import { AnnouncementFormSchemaType } from "@/types/zod-schemas";
 
 export type AnnouncementListResponse = {

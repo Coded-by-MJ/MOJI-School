@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         : {}),
     };
 
-    const [subjects, count, teachers] = await prisma.$transaction([
+    const [subjects, count, teachers] = await Promise.all([
       prisma.subject.findMany({
         where: whereClause,
         include: {

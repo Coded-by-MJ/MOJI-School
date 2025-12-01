@@ -10,8 +10,8 @@ export async function GET(
   try {
     const { role, id } = await getAuthUser();
     const { userId } = await params;
-    
-    const [data, subjects] = await prisma.$transaction([
+
+    const [data, subjects] = await Promise.all([
       prisma.teacher.findUnique({
         where: { id: userId },
         include: {
@@ -42,7 +42,10 @@ export async function GET(
     ]);
 
     if (!data) {
-      return NextResponse.json({ message: "Teacher not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Teacher not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({
@@ -67,4 +70,3 @@ export async function GET(
     );
   }
 }
-

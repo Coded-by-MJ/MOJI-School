@@ -1,6 +1,12 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { TableSearchParams, StudentTableDataType, StudentTableRelativeData, ActionState } from "@/types";
+import {
+  TableSearchParams,
+  StudentTableDataType,
+  StudentTableRelativeData,
+  ActionState,
+} from "@/types";
 import { StudentFormSchemaType } from "@/types/zod-schemas";
+import { createFormData } from "@/lib/form-data-helpers";
 
 export type StudentListResponse = {
   data: StudentTableDataType[];
@@ -43,22 +49,37 @@ export const studentsService = {
   },
 
   getClass: async (userId: string, cookies?: string) => {
-    const response = await api.get(`/api/students/${userId}/class`, withAuthHeaders(cookies));
+    const response = await api.get(
+      `/api/students/${userId}/class`,
+      withAuthHeaders(cookies)
+    );
     return response.data;
   },
 
   create: async (data: StudentFormSchemaType) => {
+    const formData = createFormData(data);
     const response = await api.post<StudentMutationResponse>(
       `/api/students`,
-      data
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response.data;
   },
 
   update: async (userId: string, data: StudentFormSchemaType) => {
+    const formData = createFormData(data);
     const response = await api.patch<StudentMutationResponse>(
       `/api/students/${userId}`,
-      data
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response.data;
   },
@@ -70,4 +91,3 @@ export const studentsService = {
     return response.data;
   },
 };
-

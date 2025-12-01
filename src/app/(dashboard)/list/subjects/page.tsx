@@ -2,7 +2,7 @@ import { getQueryClient, getCookiesString } from "@/lib/query-client-helpers";
 import { subjectsQueries } from "@/queries/subjects";
 import { TableSearchParams } from "@/types";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import SubjectsListClient from "./SubjectsListClient";
+import SubjectsListClient from "@/components/global/SubjectsListClient";
 
 async function SubjectsListPage({ searchParams }: PageProps<"/list/subjects">) {
   const queryParams = await searchParams;

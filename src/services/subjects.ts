@@ -4,8 +4,8 @@ import {
   SubjectTableDataType,
   SubjectTableRelativeData,
   ActionState,
-  UserRole,
 } from "@/types";
+import { UserRole } from "@/generated/prisma";
 import { SubjectFormSchemaType } from "@/types/zod-schemas";
 
 export type SubjectListResponse = {

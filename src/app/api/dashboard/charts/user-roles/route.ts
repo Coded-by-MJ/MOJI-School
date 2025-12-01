@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     await getAuthUser();
     
-    const [teachers, parents, students] = await prisma.$transaction([
+    const [teachers, parents, students] = await Promise.all([
       prisma.teacher.count(),
       prisma.parent.count(),
       prisma.student.count(),

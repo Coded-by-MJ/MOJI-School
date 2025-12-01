@@ -1,3 +1,5 @@
+"use client";
+
 import { Megaphone, MessageCircleMore } from "lucide-react";
 import { Button } from "../ui/button";
 import DashboardSearchBar from "./DashboardSearchBar";
@@ -7,11 +9,18 @@ import { SidebarTrigger } from "../ui/sidebar";
 import { SessionType } from "@/lib/auth-types";
 import { getDefaultImage } from "@/utils/funcs";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { announcementsQueries } from "@/queries/announcements";
 
 type Props = {
   user: SessionType["user"];
 };
 function DashboardNavbar({ user }: Props) {
+  const { data: recentAnnouncements } = useQuery(
+    announcementsQueries.getRecent()
+  );
+  const announcementCount = recentAnnouncements?.length || 0;
+
   return (
     <nav className="w-full flex py-2 items-center justify-between">
       <div className="hidden w-1/2 max-w-sm md:flex">
@@ -27,10 +36,6 @@ function DashboardNavbar({ user }: Props) {
         >
           <Link href="/list/messages">
             <MessageCircleMore className="size-5" />
-
-            <span className="absolute -top-2 -right-2 text-center size-5 bg-red-500 rounded-full">
-              1
-            </span>
           </Link>
         </Button>{" "}
         <Button
@@ -41,16 +46,18 @@ function DashboardNavbar({ user }: Props) {
           <Link href="/list/announcements">
             <Megaphone className="size-5" />
 
-            <span className="absolute -top-2 -right-2 size-5 text-center bg-red-500 rounded-full">
-              1
-            </span>
+            {announcementCount > 0 && (
+              <span className="absolute -top-2 -right-2 size-5 text-center bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
+                {announcementCount}
+              </span>
+            )}
           </Link>
         </Button>
         <div className="flex gap-1 flex-col">
           <span className="text-sm leading-3 font-semibold">{user.name}</span>
           <Badge className="capitalize">{user.role}</Badge>
         </div>
-        <Avatar className="size-9">
+        <Avatar className="size-10">
           <AvatarImage src={user.image || getDefaultImage(user.name)} />
           <AvatarFallback>{user.name}</AvatarFallback>
         </Avatar>

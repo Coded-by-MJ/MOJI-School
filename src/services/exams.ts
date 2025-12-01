@@ -1,5 +1,6 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { TableSearchParams, ExamTableDataType, ExamTableRelativeData, ActionState, UserRole } from "@/types";
+import { TableSearchParams, ExamTableDataType, ExamTableRelativeData, ActionState } from "@/types";
+import { UserRole } from "@/generated/prisma";
 import { ExamFormSchemaType } from "@/types/zod-schemas";
 
 export type ExamListResponse = {

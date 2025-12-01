@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         : {}),
     };
 
-    const [classes, count, grades, teachers] = await prisma.$transaction([
+    const [classes, count, grades, teachers] = await Promise.all([
       prisma.class.findMany({
         where: whereClause,
         include: {

@@ -1,5 +1,6 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { TableSearchParams, ClassTableDataType, ClassTableRelativeData, ActionState, UserRole } from "@/types";
+import { TableSearchParams, ClassTableDataType, ClassTableRelativeData, ActionState } from "@/types";
+import { UserRole } from "@/generated/prisma";
 import { ClassFormSchemaType } from "@/types/zod-schemas";
 
 export type ClassListResponse = {

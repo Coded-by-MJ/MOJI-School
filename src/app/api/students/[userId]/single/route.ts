@@ -11,7 +11,7 @@ export async function GET(
     const { role, id } = await getAuthUser();
     const { userId } = await params;
     
-    const [data, grades, classes, parents] = await prisma.$transaction([
+    const [data, grades, classes, parents] = await Promise.all([
       prisma.student.findUnique({
         where: { id: userId },
         include: {

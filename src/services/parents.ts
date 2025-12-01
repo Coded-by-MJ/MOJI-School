@@ -1,6 +1,12 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { TableSearchParams, ParentTableDataType, ActionState, UserRole } from "@/types";
+import {
+  TableSearchParams,
+  ParentTableDataType,
+  ActionState,
+} from "@/types";
+import { UserRole } from "@/generated/prisma";
 import { ParentFormSchemaType } from "@/types/zod-schemas";
+import { createFormData } from "@/lib/form-data-helpers";
 
 export type ParentListResponse = {
   data: ParentTableDataType[];
@@ -20,22 +26,37 @@ export const parentsService = {
   },
 
   getStudents: async (userId: string, cookies?: string) => {
-    const response = await api.get(`/api/parents/${userId}/students`, withAuthHeaders(cookies));
+    const response = await api.get(
+      `/api/parents/${userId}/students`,
+      withAuthHeaders(cookies)
+    );
     return response.data;
   },
 
   create: async (data: ParentFormSchemaType) => {
+    const formData = createFormData(data);
     const response = await api.post<ParentMutationResponse>(
       `/api/parents`,
-      data
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response.data;
   },
 
   update: async (userId: string, data: ParentFormSchemaType) => {
+    const formData = createFormData(data);
     const response = await api.patch<ParentMutationResponse>(
       `/api/parents/${userId}`,
-      data
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response.data;
   },
@@ -47,4 +68,3 @@ export const parentsService = {
     return response.data;
   },
 };
-

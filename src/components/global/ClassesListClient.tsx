@@ -10,36 +10,37 @@ import { SlidersHorizontal, ListFilter } from "lucide-react";
 import { classesQueries } from "@/queries/classes";
 import { TableSearchParams } from "@/types";
 import { useQuery } from "@tanstack/react-query";
+import { ListSkeleton } from "./SkeletonsLoading";
 
 function ClassesListClient({
   filterParams,
 }: {
   filterParams: TableSearchParams;
 }) {
-  const { data } = useQuery(classesQueries.list(filterParams));
+  const { data, isLoading } = useQuery(classesQueries.list(filterParams));
 
-  if (!data) {
-    return <div>Loading...</div>;
+  if (isLoading || !data) {
+    return <ListSkeleton />;
   }
 
   return (
-    <section className="bg-muted gap-4 rounded-md  flex-col flex flex-1">
+    <section className="bg-muted gap-4 rounded-md flex-col justify-between flex flex-1">
       <div className="flex p-4 w-full justify-between items-center">
         <h1 className="hidden md:block text-lg font-semibold">All Classes</h1>
-        <div className="flex w-max flex-1 md:justify-end  flex-col md:flex-row items-center gap-4">
+        <div className="flex w-max flex-1 md:justify-end flex-col md:flex-row items-center gap-4">
           <div className="md:max-w-[15rem] w-full">
             <DashboardSearchBar
               searchKey="search"
               placeHolder="Search for class"
             />
           </div>
-          <div className="flex gap-4  items-center self-end">
-            <Button size={"icon"} className="rounded-full  bg-primary">
+          <div className="flex gap-4 items-center self-end">
+            <Button size={"icon"} className="rounded-full bg-primary">
               <ListFilter className="size-4" />
-            </Button>{" "}
-            <Button size={"icon"} className="rounded-full  bg-primary">
+            </Button>
+            <Button size={"icon"} className="rounded-full bg-primary">
               <SlidersHorizontal className="size-4" />
-            </Button>{" "}
+            </Button>
             <AllowedUserCompClient allowedRoles={["admin"]}>
               <FormDialog
                 type="create"
@@ -63,4 +64,3 @@ function ClassesListClient({
 }
 
 export default ClassesListClient;
-

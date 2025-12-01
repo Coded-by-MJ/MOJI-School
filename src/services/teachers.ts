@@ -1,6 +1,12 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { TableSearchParams, TeacherTableDataType, TeacherTableRelativeData, ActionState } from "@/types";
+import {
+  TableSearchParams,
+  TeacherTableDataType,
+  TeacherTableRelativeData,
+  ActionState,
+} from "@/types";
 import { TeacherFormSchemaType } from "@/types/zod-schemas";
+import { createFormData } from "@/lib/form-data-helpers";
 
 export type TeacherListResponse = {
   data: TeacherTableDataType[];
@@ -45,22 +51,37 @@ export const teachersService = {
   },
 
   getSchedule: async (userId: string, cookies?: string) => {
-    const response = await api.get(`/api/teachers/${userId}/schedule`, withAuthHeaders(cookies));
+    const response = await api.get(
+      `/api/teachers/${userId}/schedule`,
+      withAuthHeaders(cookies)
+    );
     return response.data;
   },
 
   create: async (data: TeacherFormSchemaType) => {
+    const formData = createFormData(data);
     const response = await api.post<TeacherMutationResponse>(
       `/api/teachers`,
-      data
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response.data;
   },
 
   update: async (userId: string, data: TeacherFormSchemaType) => {
+    const formData = createFormData(data);
     const response = await api.patch<TeacherMutationResponse>(
       `/api/teachers/${userId}`,
-      data
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response.data;
   },
@@ -72,4 +93,3 @@ export const teachersService = {
     return response.data;
   },
 };
-

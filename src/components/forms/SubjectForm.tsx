@@ -14,11 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { subjectFormSchema, SubjectFormSchemaType } from "@/types/zod-schemas";
 import { SubjectTableDataType, SubjectTableRelativeData } from "@/types";
-import { createSubject, updateSubject } from "@/lib/mutation-actions";
+import { subjectsMutations } from "@/queries/subjects";
 import { toast } from "sonner";
-import { renderClientError } from "@/utils/funcs";
-import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 
 const SubjectForm = ({
   type,
@@ -34,7 +33,7 @@ const SubjectForm = ({
   const selectedTeachers =
     data && data.teachers ? data?.teachers.map((c) => c.id) : [];
   const allTeachers = relativeData?.teachers || [];
-  const [isLoading, setIsLoading] = useState(false);
+  
   const form = useForm<SubjectFormSchemaType>({
     resolver: zodResolver(subjectFormSchema),
     defaultValues: {
@@ -43,41 +42,51 @@ const SubjectForm = ({
     },
   });
 
-  const handleCreate = async (values: SubjectFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: subjectsMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["subjects"] });
+    },
+  });
 
-    try {
-      const msg = await createSubject(values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: SubjectFormSchemaType) => {
-    setIsLoading(true);
-
-    try {
-      const msg = await updateSubject(data?.id!, values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: subjectsMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["subjects"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["subject", variables.id],
+      });
+    },
+  });
 
   const onSubmit = (values: SubjectFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else if (type === "update") {
-      handleUpdate(values);
+      if (data?.id) {
+        updateMutation.mutate(
+          { id: data.id, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

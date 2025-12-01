@@ -1,5 +1,6 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { TableSearchParams, AttendanceTableDataType, AttendanceTableRelativeData, ActionState, UserRole } from "@/types";
+import { TableSearchParams, AttendanceTableDataType, AttendanceTableRelativeData, ActionState } from "@/types";
+import { UserRole } from "@/generated/prisma";
 import { AttendanceFormSchemaType } from "@/types/zod-schemas";
 
 export type AttendanceListResponse = {

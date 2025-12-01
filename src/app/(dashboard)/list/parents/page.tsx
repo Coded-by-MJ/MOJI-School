@@ -2,7 +2,7 @@ import { getQueryClient, getCookiesString } from "@/lib/query-client-helpers";
 import { parentsQueries } from "@/queries/parents";
 import { TableSearchParams } from "@/types";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import ParentsListClient from "./ParentsListClient";
+import ParentsListClient from "@/components/global/ParentsListClient";
 
 async function ParentsListPage({ searchParams }: PageProps<"/list/parents">) {
   const queryParams = await searchParams;

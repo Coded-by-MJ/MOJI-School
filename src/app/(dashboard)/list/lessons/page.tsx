@@ -2,7 +2,7 @@ import { getQueryClient, getCookiesString } from "@/lib/query-client-helpers";
 import { lessonsQueries } from "@/queries/lessons";
 import { TableSearchParams } from "@/types";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import LessonsListClient from "./LessonsListClient";
+import LessonsListClient from "@/components/global/LessonsListClient";
 
 async function LessonsListPage({ searchParams }: PageProps<"/list/lessons">) {
   const queryParams = await searchParams;

@@ -35,11 +35,10 @@ export async function GET(request: NextRequest) {
             title: { contains: params.search, mode: "insensitive" },
           }
         : {}),
-      classId: null,
       class: roleConditions[role as keyof typeof roleConditions] || {},
     };
 
-    const [announcements, count, classes] = await prisma.$transaction([
+    const [announcements, count, classes] = await Promise.all([
       prisma.announcement.findMany({
         where: whereClause,
         include: { class: { select: { id: true, name: true } } },

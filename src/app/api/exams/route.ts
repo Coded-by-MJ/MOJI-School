@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         : {}),
     };
 
-    const [exams, count, lessons] = await prisma.$transaction([
+    const [exams, count, lessons] = await Promise.all([
       prisma.exam.findMany({
         where: whereClause,
         include: {

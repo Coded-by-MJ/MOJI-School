@@ -1,5 +1,6 @@
 import { api, withAuthHeaders } from "@/lib/axios-client";
-import { RelativeAdminDataType, UserRole } from "@/types";
+import { RelativeAdminDataType } from "@/types";
+import { UserRole } from "@/generated/prisma";
 
 export type AdminDataResponse = {
   data: RelativeAdminDataType;
