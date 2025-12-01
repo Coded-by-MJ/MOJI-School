@@ -15,7 +15,7 @@ import type {
   Event,
   Announcement,
   Result,
-} from "@prisma/client";
+} from "@/generated/prisma";
 
 export type UserRole = "user" | "admin" | "parent" | "teacher" | "student";
 

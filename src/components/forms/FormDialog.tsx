@@ -38,26 +38,23 @@ import {
   TeacherTableDataType,
   TeacherTableRelativeData,
 } from "@/types";
-import { useEffect, useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import {
-  deleteAnnouncement,
-  deleteAssignment,
-  deleteAttendance,
-  deleteClass,
-  deleteEvent,
-  deleteExam,
-  deleteLesson,
-  deleteParent,
-  deleteResult,
-  deleteStudent,
-  deleteSubject,
-  deleteTeacher,
-} from "@/lib/mutation-actions";
-import { useFormState } from "react-dom";
-import { FormSubmitButton } from "./FormSubmitButton";
+  teachersMutations,
+  studentsMutations,
+  parentsMutations,
+  subjectsMutations,
+  classesMutations,
+  lessonsMutations,
+  examsMutations,
+  assignmentsMutations,
+  resultsMutations,
+  attendancesMutations,
+  announcementsMutations,
+  eventsMutations,
+} from "@/queries";
 
 const TeacherForm = dynamic(() => import("./TeacherForm"), {
   loading: () => <FormSkeleton />,
@@ -150,24 +147,19 @@ type RelativeDataMap = {
   event: EventTableRelativeData;
   announcement: AnnouncementTableRelativeData;
 };
-type DeleteActionFn = (
-  currentState: ActionState,
-  formData: FormData
-) => ActionState | Promise<ActionState>;
-
-const deleteActionMap: Record<string, DeleteActionFn> = {
-  teacher: deleteTeacher,
-  student: deleteStudent,
-  parent: deleteParent,
-  subject: deleteSubject,
-  class: deleteClass,
-  exam: deleteExam,
-  lesson: deleteLesson,
-  assignment: deleteAssignment,
-  result: deleteResult,
-  attendance: deleteAttendance,
-  event: deleteEvent,
-  announcement: deleteAnnouncement,
+const deleteMutationMap = {
+  teacher: teachersMutations.delete,
+  student: studentsMutations.delete,
+  parent: parentsMutations.delete,
+  subject: subjectsMutations.delete,
+  class: classesMutations.delete,
+  exam: examsMutations.delete,
+  lesson: lessonsMutations.delete,
+  assignment: assignmentsMutations.delete,
+  result: resultsMutations.delete,
+  attendance: attendancesMutations.delete,
+  event: eventsMutations.delete,
+  announcement: announcementsMutations.delete,
 };
 
 type FormDialogProps<T extends keyof FormDataMap> = {
@@ -307,29 +299,69 @@ function FormDialog<T extends keyof FormDataMap>({
     setIsOpen(false);
   };
 
-  const Form = () => {
-    const [state, formAction] = useFormState<ActionState, FormData>(
-      deleteActionMap[table],
-      { message: "", type: "success" }
-    );
-
-    useEffect(() => {
-      if (state && state.message.length > 0) {
-        toast[state.type](state.message);
-        onClose();
+  const deleteMutation = useMutation<
+    ActionState,
+    unknown,
+    { userId?: string; id?: string }
+  >({
+    mutationFn: async (variables) => {
+      const mutationFn = deleteMutationMap[table] as (vars: {
+        userId?: string;
+        id?: string;
+      }) => Promise<ActionState>;
+      return await mutationFn(variables);
+    },
+    onSettled: (_, __, variables, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: [table + "s"] });
+      if (table === "teacher" || table === "student" || table === "parent") {
+        const deleteId = userId || variables?.userId || variables?.id;
+        if (deleteId) {
+          mutationContext.client.invalidateQueries({
+            queryKey: [table, deleteId],
+          });
+        }
       }
-    }, [state]);
+    },
+  });
 
-    if (type === "delete" && id) {
+  const Form = () => {
+    if (type === "delete" && (id || userId)) {
+      const handleDelete = () => {
+        const deleteId = userId || id;
+        if (!deleteId) return;
+
+        // For teachers, students, parents - use userId
+        // For others - use id
+        const variables =
+          table === "teacher" || table === "student" || table === "parent"
+            ? { userId: deleteId }
+            : { id: deleteId };
+
+        deleteMutation.mutate(variables as { userId?: string; id?: string }, {
+          onSuccess: (data) => {
+            if (data.type === "success") {
+              toast.success(data.message);
+            } else {
+              toast.error(data.message);
+            }
+            onClose();
+          },
+        });
+      };
+
       return (
-        <form action={formAction} className="p-4 flex flex-col gap-4">
-          <input type="text" name="id" value={id} hidden />
-          <input type="text" name="userId" value={userId} hidden />
+        <div className="p-4 flex flex-col gap-4">
           <span className="text-center font-medium">
             All data will be lost. Are you sure you want to delete this {table}?
           </span>
-          <FormSubmitButton />
-        </form>
+          <Button
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+            className="bg-destructive"
+          >
+            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+          </Button>
+        </div>
       );
     }
 

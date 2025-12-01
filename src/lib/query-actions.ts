@@ -3,7 +3,7 @@
 import { TableSearchParams } from "@/types";
 import prisma from "./prisma";
 import { getAuthUser, isUserAllowed } from "./users";
-import { Prisma, UserRole, UserSex } from "@prisma/client";
+import { Prisma, UserRole, UserSex } from "@/generated/prisma";
 import { ITEMS_PER_PAGE } from "@/utils";
 
 const renderError = (error: unknown) => {

@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/global/DataTable";
 import FormDialog from "../forms/FormDialog";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import { LessonTableDataType, LessonTableRelativeData } from "@/types";
 
 type Props = {

@@ -7,7 +7,7 @@ import { announcementsData, role } from "@/lib/data";
 import { DataTable } from "@/components/global/DataTable";
 import FormDialog from "../forms/FormDialog";
 
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import {
   AnnouncementTableDataType,
   AnnouncementTableRelativeData,

@@ -3,6 +3,7 @@ import { Anaheim, Alkalami, Chivo_Mono } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
+import Providers from "./providers";
 const anaheim = Anaheim({ subsets: ["latin"], variable: "--font-sans" });
 const alkalami = Alkalami({
   subsets: ["latin"],
@@ -57,12 +58,14 @@ export default function RootLayout({
       <body
         className={(anaheim.variable, alkalami.variable, chivoMono.variable)}
       >
+        <Providers>
         <NextTopLoader
           color="oklch(0.9645 0.0261 90.0969)"
           showSpinner={false}
         />
         {children}
         <Toaster position="top-right" richColors />
+        </Providers>
       </body>
     </html>
   );

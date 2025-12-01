@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import { useRouter } from "next/navigation";
 import React from "react";
 

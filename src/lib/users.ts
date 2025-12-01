@@ -1,6 +1,6 @@
 "use server";
 
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import { auth } from "./auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";

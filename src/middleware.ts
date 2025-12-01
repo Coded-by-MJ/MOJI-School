@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth"; // your better-auth instance
 import { headers } from "next/headers";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import { routeAccessMap } from "./utils";
 
 const privateRoutes = ["/list", "/profile", "/settings"];

@@ -6,7 +6,7 @@ import { DataTable } from "@/components/global/DataTable";
 
 import FormDialog from "../forms/FormDialog";
 import { AssignmentTableDataType, AssignmentTableRelativeData } from "@/types";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import { format } from "date-fns";
 
 type Props = {

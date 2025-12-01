@@ -1,16 +1,8 @@
-import DashboardSearchBar from "@/components/dashboard/DashboardSearchBar";
-import Pagination from "@/components/global/Pagination";
-import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, ListFilter } from "lucide-react";
-import StudentsTableWrapper from "@/components/global/StudentsTableWrapper";
-import FormDialog from "@/components/forms/FormDialog";
-import AllowedUserCompClient from "@/components/auth/AllowedUserCompClient";
-import { fetchStudentList } from "@/lib/query-actions";
-import {
-  StudentTableRelativeData,
-  StudentTableDataType,
-  TableSearchParams,
-} from "@/types";
+import { getQueryClient, getCookiesString } from "@/lib/query-client-helpers";
+import { studentsQueries } from "@/queries/students";
+import { TableSearchParams } from "@/types";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
+import StudentsListClient from "./StudentsListClient";
 
 async function StudentsListPage({ searchParams }: PageProps<"/list/students">) {
   const queryParams = await searchParams;
@@ -19,43 +11,18 @@ async function StudentsListPage({ searchParams }: PageProps<"/list/students">) {
     page: queryParams.page ? parseInt(queryParams.page.toString()) : 1,
     search: queryParams.search?.toString(),
   };
-  const { data, count, relativeData } = await fetchStudentList<
-    StudentTableDataType[],
-    StudentTableRelativeData
-  >(filterParams);
+
+  const queryClient = getQueryClient();
+  const cookies = await getCookiesString();
+
+  await queryClient.prefetchQuery(
+    studentsQueries.withCookies(cookies).list(filterParams)
+  );
+
   return (
-    <section className="bg-muted gap-4 rounded-md flex-col flex flex-1">
-      <div className="flex p-4 w-full justify-between items-center">
-        <h1 className="hidden md:block text-lg font-semibold">All Students</h1>
-        <div className="flex w-max flex-1 md:justify-end  flex-col md:flex-row items-center gap-4">
-          <div className="md:max-w-[15rem] w-full">
-            <DashboardSearchBar
-              searchKey="search"
-              placeHolder="Search for student"
-            />
-          </div>
-          <div className="flex gap-4  items-center self-end">
-            <Button size={"icon"} className="rounded-full  bg-primary">
-              <ListFilter className="size-4" />
-            </Button>{" "}
-            <Button size={"icon"} className="rounded-full  bg-primary">
-              <SlidersHorizontal className="size-4" />
-            </Button>{" "}
-            <AllowedUserCompClient allowedRoles={["admin"]}>
-              <FormDialog
-                type="create"
-                table="student"
-                relativeData={relativeData}
-              />
-            </AllowedUserCompClient>
-          </div>
-        </div>
-      </div>
-
-      <StudentsTableWrapper data={data} relativeData={relativeData} />
-
-      <Pagination page={filterParams.page} count={count} />
-    </section>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <StudentsListClient filterParams={filterParams} />
+    </HydrationBoundary>
   );
 }
 export default StudentsListPage;

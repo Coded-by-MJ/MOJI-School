@@ -21,12 +21,12 @@ import {
 } from "@/components/ui/select";
 import { studentFormSchema, StudentFormSchemaType } from "@/types/zod-schemas";
 import { UploadCloud } from "lucide-react";
-import { extractOrJoinName, renderClientError } from "@/utils/funcs";
+import { extractOrJoinName } from "@/utils/funcs";
 import { toast } from "sonner";
-import { createStudent, updateStudent } from "@/lib/mutation-actions";
-import { useState } from "react";
+import { studentsMutations } from "@/queries/students";
 import { StudentTableDataType, StudentTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 
 const StudentForm = ({
   type,
@@ -39,8 +39,6 @@ const StudentForm = ({
   relativeData?: StudentTableRelativeData;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const grades = relativeData?.grades || [];
   const parents = relativeData?.parents || [];
   const classes = relativeData?.classes || [];
@@ -60,46 +58,51 @@ const StudentForm = ({
     },
   });
 
-  const handleCreate = async (values: StudentFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: studentsMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["students"] });
+    },
+  });
 
-    try {
-      const msg = await createStudent(values);
-      toast[msg.type](msg.message);
-      if (msg.type === "success") {
-        onClose();
-      }
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: StudentFormSchemaType) => {
-    setIsLoading(true);
-    try {
-      if (data && data.userId) {
-        const msg = await updateStudent(data?.userId, values);
-        toast[msg.type](msg.message);
-        if (msg.type === "success") {
-          onClose();
-        }
-      }
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: studentsMutations.update,
+    onSettled: (_, __, variables, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["students"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["student", variables.userId],
+      });
+    },
+  });
 
   const onSubmit = (values: StudentFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data && data.userId) {
+        updateMutation.mutate(
+          { userId: data.userId, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

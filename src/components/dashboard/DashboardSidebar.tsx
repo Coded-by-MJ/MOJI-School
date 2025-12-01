@@ -17,7 +17,7 @@ import { sidebarMenuLinks, sidebarOtherLinks } from "./Links";
 // import { LogoSvg } from "@/components/global/Logo";
 
 import Link from "next/link";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import { SessionType } from "@/lib/auth-types";
 import { LogoImage } from "../global/Logo";
 import { DashboardLink } from "@/types";
