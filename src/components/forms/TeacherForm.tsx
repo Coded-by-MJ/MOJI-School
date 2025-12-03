@@ -21,12 +21,12 @@ import {
 } from "@/components/ui/select";
 import { teacherFormSchema, TeacherFormSchemaType } from "@/types/zod-schemas";
 import { UploadCloud } from "lucide-react";
-import { extractOrJoinName, renderClientError } from "@/utils/funcs";
+import { extractOrJoinName } from "@/utils/funcs";
 import { toast } from "sonner";
-import { createTeacher, updateTeacher } from "@/lib/mutation-actions";
-import { useState } from "react";
+import { teachersMutations } from "@/queries/teachers";
 import { TeacherTableDataType, TeacherTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 
 const TeacherForm = ({
   type,
@@ -39,13 +39,11 @@ const TeacherForm = ({
   onClose: () => void;
   relativeData?: TeacherTableRelativeData;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const selectedSubjects =
     data && data.subjects ? data?.subjects.map((s) => s.id) : [];
-      const subjects = relativeData?.subjects || [];
+  const subjects = relativeData?.subjects || [];
 
-  const form = useForm<TeacherFormSchemaType>({
+  const form = useForm({
     resolver: zodResolver(teacherFormSchema),
     mode: "onChange",
     defaultValues: {
@@ -61,47 +59,58 @@ const TeacherForm = ({
     },
   });
 
+  const createMutation = useMutation({
+    mutationFn: teachersMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["teachers"] });
+    },
+  });
 
-
-  const handleCreate = async (values: TeacherFormSchemaType) => {
-    setIsLoading(true);
-    try {
-      const msg = await createTeacher(values);
-      toast[msg.type](msg.message);
-      if (msg.type === "success") {
-        onClose();
+  const updateMutation = useMutation({
+    mutationFn: teachersMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["teachers"] });
+      // Use teacher's id (not userId) for query key since the page uses teacherId
+      // The route /list/teachers/[teacherId] uses teacher.id, not user.id
+      if (data?.id) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher", data.id],
+        });
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher-schedule", data.id],
+        });
       }
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: TeacherFormSchemaType) => {
-    setIsLoading(true);
-    try {
-      if (data && data.userId) {
-        const msg = await updateTeacher(data.userId, values);
-        toast[msg.type](msg.message);
-        if (msg.type === "success") {
-          onClose();
-        }
-      }
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
   const onSubmit = (values: TeacherFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data && data.userId) {
+        updateMutation.mutate(
+          { userId: data.userId, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>
@@ -195,10 +204,14 @@ const TeacherForm = ({
                     type="date"
                     value={
                       field.value
-                        ? field.value.toISOString().split("T")[0]
+                        ? (field.value as Date).toISOString().split("T")[0]
                         : undefined
                     }
-                    onChange={(e) => field.onChange(new Date(e.target.value))}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value ? new Date(e.target.value) : undefined
+                      )
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -317,9 +330,13 @@ const TeacherForm = ({
                       accept="image/*"
                       hidden
                       className="invisible"
-                      onChange={(e) =>
-                        field.onChange(e.target.files?.[0] ?? null)
-                      }
+                      onChange={(e) => {
+                        const file =
+                          e.target.files && e.target.files.length > 0
+                            ? e.target.files[0]
+                            : null;
+                        field.onChange(file);
+                      }}
                     />
                   </div>
                 </FormControl>

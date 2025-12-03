@@ -23,9 +23,7 @@ import {
   announcementFormSchema,
   AnnouncementFormSchemaType,
 } from "@/types/zod-schemas";
-import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
-import { useState } from "react";
 import { format, parseISO } from "date-fns";
 
 import {
@@ -33,7 +31,8 @@ import {
   AnnouncementTableRelativeData,
 } from "@/types";
 import { Loader2 } from "lucide-react";
-import { createAnnouncement, updateAnnouncement } from "@/lib/mutation-actions";
+import { announcementsMutations } from "@/queries/announcements";
+import { useMutation } from "@tanstack/react-query";
 
 const AnnouncementForm = ({
   type,
@@ -46,8 +45,6 @@ const AnnouncementForm = ({
   relativeData?: AnnouncementTableRelativeData;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const classes = relativeData?.classes || [];
 
   const form = useForm({
@@ -61,41 +58,51 @@ const AnnouncementForm = ({
     },
   });
 
-  const handleCreate = async (values: AnnouncementFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: announcementsMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["announcements"] });
+    },
+  });
 
-    try {
-      const msg = await createAnnouncement(values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: AnnouncementFormSchemaType) => {
-    setIsLoading(true);
-
-    try {
-      const msg = await updateAnnouncement(data?.id!, values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: announcementsMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["announcements"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["announcement", variables.id],
+      });
+    },
+  });
 
   const onSubmit = (values: AnnouncementFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data?.id) {
+        updateMutation.mutate(
+          { id: data.id, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

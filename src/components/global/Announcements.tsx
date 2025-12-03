@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Announcement } from "@prisma/client";
+import { Announcement } from "@/generated/prisma";
 import { formatDate } from "date-fns";
 
 type Props = {

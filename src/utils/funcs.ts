@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma";
 import { toast } from "sonner";
 
 export const getDefaultImage = (name: string) => {

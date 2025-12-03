@@ -20,13 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { resultFormSchema, ResultFormSchemaType } from "@/types/zod-schemas";
-import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
-import { useState } from "react";
 
 import { ResultTableDataType, ResultTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
-import { createResult, updateResult } from "@/lib/mutation-actions";
+import { resultsMutations } from "@/queries/results";
+import { useMutation } from "@tanstack/react-query";
 
 const ResultForm = ({
   type,
@@ -39,8 +38,6 @@ const ResultForm = ({
   relativeData?: ResultTableRelativeData;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const exams = relativeData?.exams || [];
   const assignments = relativeData?.assignments || [];
   const students = relativeData?.students || [];
@@ -57,41 +54,51 @@ const ResultForm = ({
     },
   });
 
-  const handleCreate = async (values: ResultFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: resultsMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["results"] });
+    },
+  });
 
-    try {
-      const msg = await createResult(values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: ResultFormSchemaType) => {
-    setIsLoading(true);
-
-    try {
-      const msg = await updateResult(data?.id!, values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: resultsMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["results"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["result", variables.id],
+      });
+    },
+  });
 
   const onSubmit = (values: ResultFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data?.id) {
+        updateMutation.mutate(
+          { id: data.id, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

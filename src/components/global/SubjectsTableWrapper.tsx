@@ -6,7 +6,7 @@ import { DataTable } from "@/components/global/DataTable";
 
 import FormDialog from "../forms/FormDialog";
 import { SubjectTableDataType, SubjectTableRelativeData } from "@/types";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 
 type Props = {
   data: SubjectTableDataType[];

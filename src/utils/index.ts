@@ -1,4 +1,4 @@
-import { UserRole } from "@/types";
+import { UserRole } from "@/generated/prisma";
 
 export const ITEMS_PER_PAGE = 10
 

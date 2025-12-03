@@ -1,24 +1,23 @@
-import Announcements from "@/components/global/Announcements";
 import ClassSchedule from "@/components/global/ClassSchedule";
-import { fetchAnnouncementData } from "@/lib/query-actions";
 import { isUserAllowed } from "@/lib/users";
+import { getQueryClient, getCookiesString } from "@/lib/query-client-helpers";
+import { announcementsQueries } from "@/queries/announcements";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
+import TeacherPageClient from "@/components/dashboard/TeacherPageClient";
 
 async function TeachersPage() {
   const { id } = await isUserAllowed(["teacher"]);
-  const announcementData = await fetchAnnouncementData();
-  return (
-    <section className="flex  flex-1 gap-4 flex-col xl:flex-row">
-      {/* LEFT */}
-      <div className="w-full  flex flex-col  gap-4 xl:w-2/3">
-        <ClassSchedule type="teacherId" id={id} heading={"Schedule"} />
-      </div>
+  const queryClient = getQueryClient();
+  const cookies = await getCookiesString();
 
-      {/* RIGHT */}
-      <div className="w-full flex flex-col gap-8 xl:w-1/3">
-        {/* EVENTS */}
-        <Announcements data={announcementData} />
-      </div>
-    </section>
+  await queryClient.prefetchQuery(
+    announcementsQueries.withCookies(cookies).getRecent()
+  );
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <TeacherPageClient teacherId={id} />
+    </HydrationBoundary>
   );
 }
 export default TeachersPage;

@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/global/DataTable";
 import FormDialog from "../forms/FormDialog";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import { LessonTableDataType, LessonTableRelativeData } from "@/types";
 
 type Props = {
@@ -13,7 +13,7 @@ type Props = {
   relativeData: LessonTableRelativeData;
 };
 
-function LessonsTableWrapper({ data, userRole, relativeData}: Props) {
+function LessonsTableWrapper({ data, userRole, relativeData }: Props) {
   const lessonsActions: ColumnDef<LessonTableDataType>[] = [
     "teacher",
     "admin",
@@ -46,12 +46,12 @@ function LessonsTableWrapper({ data, userRole, relativeData}: Props) {
     : [];
   const columns: ColumnDef<LessonTableDataType>[] = [
     {
-      header: "Subject Name",
-      accessorKey: "subject",
+      header: "Lesson Name",
+      accessorKey: "name",
       cell: ({ row }) => {
         return (
           <div className="flex flex-col">
-            <h3 className="font-semibold">{row.original.subject.name}</h3>
+            <h3 className="font-semibold">{row.original.name}</h3>
           </div>
         );
       },

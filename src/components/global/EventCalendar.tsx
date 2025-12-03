@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { MoreHorizontal } from "lucide-react";
 import { useRouter } from "nextjs-toploader/app";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Event } from "@prisma/client";
+import { Event } from "@/generated/prisma";
 import { format } from "date-fns";
 
 type ValuePiece = Date | undefined;

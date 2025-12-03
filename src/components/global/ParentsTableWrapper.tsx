@@ -6,11 +6,13 @@ import { DataTable } from "@/components/global/DataTable";
 
 import FormDialog from "../forms/FormDialog";
 import { ParentTableDataType } from "@/types";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
+import Image from "next/image";
+import { getDefaultImage } from "@/utils/funcs";
 
 type Props = {
   data: ParentTableDataType[];
-  userRole: UserRole | null;
+  userRole: UserRole;
 };
 
 function ParentsTableWrapper({ userRole, data }: Props) {
@@ -49,9 +51,21 @@ function ParentsTableWrapper({ userRole, data }: Props) {
       id: "info",
       cell: ({ row }) => {
         return (
-          <div className="flex flex-col">
-            <h3 className="font-semibold">{row.original.user.name}</h3>
-            <p className="text-xs text-gray-500">{row.original.user.email}</p>
+          <div className="flex items-center gap-4">
+            <Image
+              src={
+                row.original.user.image ||
+                getDefaultImage(row.original.user.name)
+              }
+              alt={row.original.user.name}
+              width={40}
+              height={40}
+              className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
+            />
+            <div className="flex flex-col">
+              <h3 className="font-semibold">{row.original.user.name}</h3>
+              <p className="text-xs text-gray-500">{row.original.user.email}</p>
+            </div>
           </div>
         );
       },

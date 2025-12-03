@@ -21,12 +21,11 @@ import {
 } from "@/components/ui/select";
 
 import { classFormSchema, ClassFormSchemaType } from "@/types/zod-schemas";
-import { renderClientError } from "@/utils/funcs";
 import { toast } from "sonner";
-import { useState } from "react";
 import { ClassTableDataType, ClassTableRelativeData } from "@/types";
 import { Loader2 } from "lucide-react";
-import { createClass, updateClass } from "@/lib/mutation-actions";
+import { classesMutations } from "@/queries/classes";
+import { useMutation } from "@tanstack/react-query";
 
 const ClassForm = ({
   type,
@@ -39,8 +38,6 @@ const ClassForm = ({
   relativeData?: ClassTableRelativeData;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const form = useForm({
     resolver: zodResolver(classFormSchema),
     mode: "onChange",
@@ -55,41 +52,62 @@ const ClassForm = ({
   const teachers = relativeData?.teachers || [];
   const grades = relativeData?.grades || [];
 
-  const handleCreate = async (values: ClassFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: classesMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["classes"] });
+    },
+  });
 
-    try {
-      const msg = await createClass(values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: ClassFormSchemaType) => {
-    setIsLoading(true);
-
-    try {
-      const msg = await updateClass(data?.id!, values);
-      toast[msg.type](msg.message);
-      onClose();
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: classesMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["classes"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["class-schedule", variables.id],
+      });
+      // Invalidate teacher schedule if supervisor changed
+      if (data?.supervisorId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher-schedule", data.supervisorId],
+        });
+      }
+      if (variables.data.supervisorId && variables.data.supervisorId !== data?.supervisorId) {
+        mutationContext.client.invalidateQueries({
+          queryKey: ["teacher-schedule", variables.data.supervisorId],
+        });
+      }
+    },
+  });
 
   const onSubmit = (values: ClassFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data?.id) {
+        updateMutation.mutate(
+          { id: data.id, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>

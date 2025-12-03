@@ -1,11 +1,10 @@
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
+
+// Use DIRECT_URL for seeding (same as migrations)
+// If DIRECT_URL is not set, fallback to DATABASE_URL
 
 async function main() {
-  // === ADMIN, TEACHER, STUDENT SEEDING ===
-  // Leave this part as you already have in your project.
-  // Example:
-  // await prisma.user.create({ data: { id: "admin1", role: "ADMIN", ... } });
+
 
   // === GRADES ===
   const grades = await Promise.all(
@@ -15,8 +14,6 @@ async function main() {
       })
     )
   );
-
-  
 
   // === SUBJECTS ===
   const subjectData = [
@@ -36,11 +33,7 @@ async function main() {
     subjectData.map((s) => prisma.subject.create({ data: s }))
   );
 
-  
-
-
   // === ANNOUNCEMENTS ===
-
 
   console.log("✅ Seeding completed successfully.");
 }

@@ -15,9 +15,10 @@ import type {
   Event,
   Announcement,
   Result,
-} from "@prisma/client";
+  UserRole,
+} from "@/generated/prisma";
 
-export type UserRole = "user" | "admin" | "parent" | "teacher" | "student";
+export type { UserRole } from "@/generated/prisma";
 
 export interface DashboardLink {
   icon: JSX.Element;

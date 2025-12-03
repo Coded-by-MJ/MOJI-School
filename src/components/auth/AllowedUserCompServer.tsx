@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/users";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import React from "react";
 import { redirect } from "next/navigation";
 

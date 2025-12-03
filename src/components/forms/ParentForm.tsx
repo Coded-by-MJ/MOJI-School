@@ -15,12 +15,12 @@ import { Input } from "@/components/ui/input";
 
 import { parentFormSchema, ParentFormSchemaType } from "@/types/zod-schemas";
 import { UploadCloud } from "lucide-react";
-import { extractOrJoinName, renderClientError } from "@/utils/funcs";
+import { extractOrJoinName } from "@/utils/funcs";
 import { toast } from "sonner";
-import { createParent, updateParent } from "@/lib/mutation-actions";
-import { useState } from "react";
+import { parentsMutations } from "@/queries/parents";
 import { ParentTableDataType } from "@/types";
 import { Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 
 const ParentForm = ({
   type,
@@ -31,8 +31,6 @@ const ParentForm = ({
   data?: Partial<ParentTableDataType>;
   onClose: () => void;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const form = useForm<ParentFormSchemaType>({
     resolver: zodResolver(parentFormSchema),
     mode: "onChange",
@@ -45,46 +43,51 @@ const ParentForm = ({
     },
   });
 
-  const handleCreate = async (values: ParentFormSchemaType) => {
-    setIsLoading(true);
+  const createMutation = useMutation({
+    mutationFn: parentsMutations.create,
+    onSettled: (_, __, ___, ____, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["parents"] });
+    },
+  });
 
-    try {
-      const msg = await createParent(values);
-      toast[msg.type](msg.message);
-      if (msg.type === "success") {
-        onClose();
-      }
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdate = async (values: ParentFormSchemaType) => {
-    setIsLoading(true);
-    try {
-      if (data && data.userId) {
-        const msg = await updateParent(data?.userId, values);
-        toast[msg.type](msg.message);
-        if (msg.type === "success") {
-          onClose();
-        }
-      }
-    } catch (error) {
-      renderClientError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: parentsMutations.update,
+    onSettled: (_, __, variables, ___, mutationContext) => {
+      mutationContext.client.invalidateQueries({ queryKey: ["parents"] });
+      mutationContext.client.invalidateQueries({
+        queryKey: ["parent-students", variables.userId],
+      });
+    },
+  });
 
   const onSubmit = (values: ParentFormSchemaType) => {
     if (type === "create") {
-      handleCreate(values);
+      createMutation.mutate(values, {
+        onSuccess: (data) => {
+          toast[data.type](data.message);
+          if (data.type === "success") {
+            onClose();
+          }
+        },
+      });
     } else {
-      handleUpdate(values);
+      if (data && data.userId) {
+        updateMutation.mutate(
+          { userId: data.userId, data: values },
+          {
+            onSuccess: (data) => {
+              toast[data.type](data.message);
+              if (data.type === "success") {
+                onClose();
+              }
+            },
+          }
+        );
+      }
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>
@@ -193,9 +196,13 @@ const ParentForm = ({
                       accept="image/*"
                       hidden
                       className="invisible"
-                      onChange={(e) =>
-                        field.onChange(e.target.files?.[0] ?? null)
-                      }
+                      onChange={(e) => {
+                        const file =
+                          e.target.files && e.target.files.length > 0
+                            ? e.target.files[0]
+                            : null;
+                        field.onChange(file);
+                      }}
                     />
                   </div>
                 </FormControl>

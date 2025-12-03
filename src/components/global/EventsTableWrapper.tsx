@@ -10,7 +10,7 @@ import FormDialog from "../forms/FormDialog";
 
 
 import { EventTableDataType, EventTableRelativeData } from "@/types";
-import {  UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma";
 import { format } from "date-fns";
 
 type Props = {
