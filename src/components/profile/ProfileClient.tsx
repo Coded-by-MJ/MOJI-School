@@ -22,13 +22,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { profileFormSchema, ProfileFormSchemaType } from "@/types/zod-schemas";
 import { useState } from "react";
+import { UserRole } from "@/generated/prisma";
 
 type ProfileFormValues = ProfileFormSchemaType;
 
 type Props = {
   name: string;
   image: string | null | undefined;
-  role: string;
+  role: UserRole ;
   email: string;
 };
 

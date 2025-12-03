@@ -52,7 +52,6 @@ function SignInForm() {
       {
         email: values.email,
         password: values.password,
-        name: "Admin User",
       },
       {
         onRequest: () => {
@@ -96,7 +95,6 @@ function SignInForm() {
       {
         email,
         password,
-        name: `${role} User`,
       },
       {
         onRequest: () => {

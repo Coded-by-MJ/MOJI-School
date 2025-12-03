@@ -1,62 +1,41 @@
-import CountChart from "@/components/global/CountChart";
-import AttendanceChart from "@/components/global/AttendanceChart";
-import FinanceChart from "@/components/global/FinanceChart";
-import UserCard from "@/components/global/UserCard";
-import EventCalendar from "@/components/global/EventCalendar";
-import Announcements from "@/components/global/Announcements";
 import { isUserAllowed } from "@/lib/users";
-import { dashboardService } from "@/services/dashboard";
-import { eventsService } from "@/services/events";
-import { announcementsService } from "@/services/announcements";
-import { cookies as getCookies } from "next/headers";
+import { getQueryClient, getCookiesString } from "@/lib/query-client-helpers";
+import { dashboardQueries } from "@/queries/dashboard";
+import { eventsQueries } from "@/queries/events";
+import { announcementsQueries } from "@/queries/announcements";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
+import AdminPageClient from "@/components/dashboard/AdminPageClient";
 
 async function AdminPage({ searchParams }: PageProps<"/admin">) {
   await isUserAllowed(["admin"]);
   const queryParams = await searchParams;
   const eventsDate = queryParams.date ? queryParams.date.toString() : undefined;
 
-  const cookiesString = (await getCookies()).toString();
+  const queryClient = getQueryClient();
+  const cookies = await getCookiesString();
 
-  const [
-    usersData,
-    studentsChartData,
-    attendanceChartData,
-    eventsData,
-    announcementData,
-  ] = await Promise.all([
-    dashboardService.getUserRolesChart(cookiesString),
-    dashboardService.getStudentsChart(cookiesString),
-    dashboardService.getAttendanceChart(cookiesString),
-    eventsService.getByDate(eventsDate, cookiesString),
-    announcementsService.getRecent(cookiesString),
+  await Promise.all([
+    queryClient.prefetchQuery(
+      dashboardQueries.withCookies(cookies).getUserRolesChart()
+    ),
+    queryClient.prefetchQuery(
+      dashboardQueries.withCookies(cookies).getStudentsChart()
+    ),
+    queryClient.prefetchQuery(
+      dashboardQueries.withCookies(cookies).getAttendanceChart()
+    ),
+    queryClient.prefetchQuery(
+      eventsQueries.withCookies(cookies).getByDate(eventsDate)
+    ),
+    queryClient.prefetchQuery(
+      announcementsQueries.withCookies(cookies).getRecent()
+    ),
   ]);
+
   return (
-    <section className="flex gap-4 flex-col lg:flex-row">
-      {/* LEFT */}
-      <div className="w-full flex flex-col  gap-4 lg:w-2/3">
-        <div className="grid w-full grid-cols-[repeat(auto-fit,minmax(150px,1fr))] items-start h-max gap-4">
-          <UserCard type="student" count={usersData.studentsCount} />
-          <UserCard type="teacher" count={usersData.teachersCount} />
-          <UserCard type="parent" count={usersData.parentsCount} />
-          <UserCard type="staff" count={usersData.staffCount} />
-        </div>
-
-        {/* MIDDLE CHARTS */}
-        <div className="gap-4 [&>div]:h-[450px] grid grid-cols-1 lg:grid-cols-[0.5fr_1fr]">
-          <CountChart {...studentsChartData} />
-          <AttendanceChart data={attendanceChartData} />
-        </div>
-        {/* BOTTOM CHARTS */}
-        <FinanceChart />
-      </div>
-
-      {/* RIGHT */}
-      <div className="w-full flex flex-col gap-8 lg:w-1/3">
-        {/* EVENTS */}
-        <EventCalendar defaultDate={eventsDate} events={eventsData} />
-        <Announcements data={announcementData} />
-      </div>
-    </section>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <AdminPageClient eventsDate={eventsDate} />
+    </HydrationBoundary>
   );
 }
 export default AdminPage;
