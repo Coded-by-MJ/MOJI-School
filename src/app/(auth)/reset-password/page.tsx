@@ -3,29 +3,29 @@ import ResetPasswordForm from "@/components/auth/ResetPasswordForm";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Reset Password | Otega Clothing Production Company",
+  title: "Reset Password | MOJI School",
   description: "Reset your password to access your account.",
   alternates: {
     canonical: "/reset-password",
   },
   openGraph: {
-    title: "Reset Password | Otega Clothing Production Company",
+    title: "Reset Password | MOJI School",
     description: "Reset your password to access your account.",
     url: "https://moji-school.miracleibharokhonre.com/reset-password",
-    siteName: "Otega Clothing Production Company",
+    siteName: "MOJI School",
     type: "website",
     images: [
       {
         url: "https://www.miracleibharokhonre.com/images/mylogo.png",
         width: 1200,
         height: 630,
-        alt: "Otega Clothing Production Company - Reset Password",
+        alt: "MOJI School - Reset Password",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Reset Password | Otega Clothing Production Company",
+    title: "Reset Password | MOJI School",
     description: "Reset your password to access your account.",
     images: ["https://www.miracleibharokhonre.com/images/mylogo.png"],
   },
